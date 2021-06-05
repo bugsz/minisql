@@ -2,6 +2,8 @@
 from sys import getsizeof
 from struct import pack, unpack
 
+PAGE_SIZE = 8192
+
 
 def str_to_byte(str):
     return str.encode("ascii")
