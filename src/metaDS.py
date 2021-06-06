@@ -19,7 +19,7 @@ class MetaPagedData:
     def __init__(self, next_free_page, data) -> None:
         """
         : param next_free_page: int, 0-3     若为可用页，设为下一个可用页的number；若不可用，置为-1
-        : param data          : byte,4-4095  数据区，只储存整数条记录，用0填满剩余的地方
+        : param data          : byte,4-8191  数据区，只储存整数条记录，用0填满剩余的地方
         """
         self.next_free_page = next_free_page
         self.data = data
