@@ -7,6 +7,7 @@ DB_BASE_FOLDER = ""
 
 
 
+
 def str_to_byte(str):
     return str.encode("ascii")
 
