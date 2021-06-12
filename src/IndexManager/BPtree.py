@@ -1,5 +1,5 @@
 from IndexMananger.indexDS import *
-from BufferManager.BufferManager import BufferManager
+import copy
 
 class BPTreeNode:
     def __init__(self, index_id, page_id, is_root, is_leaf, father, previous, next, size, pointer, key) -> None:
@@ -137,7 +137,7 @@ class BPTree:
     @classmethod
     def __split(cls, rootNode) -> [BPTreeNode, BPTreeNode]:
         mid = rootNode.size // 2
-        retNode = rootNode                   # retNode is the right one while rootNode stays left
+        retNode = copy.deepcopy(rootNode)                   # retNode is the right one while rootNode stays left
         retNode.page_id = get_new_page_id(rootNode.index_id)
         if retNode.is_leaf:
             rootNode.next.previous = retNode.page_id
