@@ -8,6 +8,11 @@ class ReturnValue:
     # 如果有，则是一个多元数组
     value_type = []
     # 插入值的类型
+    unique = []
+    # 是否唯一
+    pk = []
+    # 主键是哪几个
+
     # TODO 不知道这部分需不需要
     column_name = None
     table_name = None
@@ -57,7 +62,11 @@ class CONDITION:
     def valid(cls, input):
         return input in cls.comparator_mapping.keys()
 
-            
+class VALUETYPE:
+    INT = 1
+    CHAR = 2
+    FLOAT = 3
+
 
 class ColumnStack:
     stack = []

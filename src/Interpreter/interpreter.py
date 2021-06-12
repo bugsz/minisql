@@ -1,6 +1,6 @@
+from interpreterDS import VALUETYPE
 from interpreterDS import ReturnValue, ACTIONTYPE, CONDITION
 from ply import yacc, lex
-import interpreterDS as interpreterDS
 
 
 tokens = (
@@ -28,6 +28,12 @@ tokens = (
     "AND",
     "STAR",
     "COMMA",
+    "UNIQUE",
+    "INT",
+    "CHAR",
+    "FLOAT",
+    "PRIMARY",
+    "KEY",
 
     "END",
 
@@ -51,6 +57,8 @@ t_EXECFILE=r"EXECFILE|execfile"
 
 t_TABLE  = r"TABLE|table"
 t_PK     = r"PK|pk"    # TODO 
+t_PRIMARY= r"PRIMARY|primary"
+t_KEY    = r"KEY|key"
 t_INDEX  = r"INDEX|index"
 
 t_ON     = r"ON|on"
@@ -63,6 +71,7 @@ t_COMMA  = r","
 
 t_STAR   = r"\*"
 t_END    = r";"
+t_UNIQUE = r"UNIQUE|unique"
 
 t_COMPARATOR = r"[<>=]{1,2}"
 
@@ -122,20 +131,80 @@ def p_expression_start(p):
                   | exp_execfile'''
 
 def p_expression_create(p):
-    '''exp_create : CREATE TABLE COLUMN_OR_TABLE LPAREN columns RPAREN END
+    '''exp_create : CREATE TABLE COLUMN_OR_TABLE LPAREN exp_create_columns RPAREN END
                   | CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE LPAREN COLUMN_OR_TABLE RPAREN END'''
     global return_value
     if p[2] in ['table', "TABLE"]:
         return_value.action_type = ACTIONTYPE.CREATE_TABLE
         return_value.table_name = p[3]
+        if check_create_table(return_value):
+            pass
+            # TODO API.api_create_table()
 
     elif p[2] in ['index', 'index']:
         return_value.action_type = ACTIONTYPE.CREATE_INDEX
         return_value.index_name = p[3]
+        if check_create_index(return_value):
+            pass
+            # TODO API.api_create_index
     else:
-        print("Invalid command {}".format(p[2]))
+        print("Invalid command {}".format(p[2])) 
     
-    # TODO create
+
+def p_expression_create_columns(p):
+    '''exp_create_columns : exp_create_valid_column
+                          | exp_create_valid_column COMMA exp_create_columns'''
+    pass
+
+def p_expression_create_valid_column(p):
+    '''exp_create_valid_column : exp_create_valid_char
+                               | exp_create_valid_int
+                               | exp_create_valid_float
+                               | exp_create_valid_pk'''
+    pass
+
+def p_expression_create_pk(p):
+    '''exp_create_valid_pk : PRIMARY KEY LPAREN exp_pk RPAREN'''
+    pass
+
+def p_expression_pk(p):
+    '''exp_pk : COLUMN_OR_TABLE
+              | COLUMN_OR_TABLE COMMA exp_pk'''
+    return_value.pk.append(p[1])
+
+def p_expression_create_valid_char(p):
+    '''exp_create_valid_char : COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN UNIQUE
+                               | COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN'''
+    if not str.isnumeric(p[4]):
+        print("[Error] String length should be a number")
+        raise SyntaxError
+    return_value.value_type.append((VALUETYPE.CHAR, int(p[4])))
+    return_value.column_data.append(p[1])
+    return_value.unique.append(len(p) == 7)
+
+    print("char variable {}".format(p[1]))
+
+def p_expression_create_valid_int(p):
+    '''exp_create_valid_int : COLUMN_OR_TABLE INT
+                            | COLUMN_OR_TABLE INT UNIQUE'''
+    global return_value
+    return_value.value_type.append((VALUETYPE.FLOAT, 0))
+    return_value.column_data.append(p[1])
+    return_value.unique.append(len(p) == 4)
+
+    print("int variable {}".format(p[1]))
+    pass
+
+def p_expression_create_valid_float(p):
+    '''exp_create_valid_float : COLUMN_OR_TABLE FLOAT
+                              | COLUMN_OR_TABLE FLOAT UNIQUE'''
+    global return_value
+    return_value.value_type.append((VALUETYPE.FLOAT, 0))
+    return_value.column_data.append(p[1])
+    return_value.unique.append(len(p) == 4)
+
+    print("float variable {}".format(p[1]))
+
 
 def p_expression_drop(p):
     '''exp_drop : DROP TABLE COLUMN_OR_TABLE 
@@ -222,11 +291,47 @@ def p_error(p):
         print("Syntax error!")
     parser.restart()
 
-def pr(return_value):
-    print(return_value)
+def check_create_table(return_value):
+    
+    print(return_value.pk)
+    if len(return_value.pk) == 0:
+        print("No primary key is specified!")
+        return False
+
+    print(return_value.column_data)
+    for pk in return_value.pk:
+        if pk not in return_value.column_data:
+            print("Primary key is not in the table!")
+            return False
+    
+    print(return_value.column_data)
+    if len(set(return_value.column_data)) != len(return_value.column_data):
+        print("Detect duplicate keys!")
+        return False
+
+    print(return_value.value_type)
+    for val_type in return_value.value_type:
+        if val_type[0] == VALUETYPE.CHAR:
+            if val_type[1] > 255 or val_type[1] < 0:
+                print("Invalid char definition!")
+                return False
+    
+    for (i, col) in enumerate(return_value.column_data):
+        if col in return_value.pk and return_value.unique[i] != True:
+            print("Primary key {} should be unique!".format(col))
+            return False
+
+    return True
+
+
+def check_create_index(return_value):
+    pass
 
 while True:
     data = input("minisql>")
+    reset()
+    while(";" not in data):
+        data = data + input()
     # print(data)
     parser = yacc.yacc()
     res = parser.parse(data)
