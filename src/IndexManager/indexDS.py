@@ -18,7 +18,7 @@ class IndexHeader:
         self.order = order
         self.root = root
 
-class IndexPage:
+class BPTreeNode:
     def __init__(self, next_free_page, is_root, is_leaf, father, previous, next, size, pointer, key) -> None:
         """
           每个B+树节点单独占用一个page
