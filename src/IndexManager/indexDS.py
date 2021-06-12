@@ -1,3 +1,6 @@
+from utils import utils
+from IndexMananger.BPTree import BPTreeNode
+
 class IndexHeader:
     def __init__(self, first_free_page, size, index_id, table_id, attr_id, order, root) -> None:
         """
@@ -18,7 +21,7 @@ class IndexHeader:
         self.order = order
         self.root = root
 
-class BPTreeNode:
+class IndexPage:
     def __init__(self, next_free_page, is_root, is_leaf, father, previous, next, size, pointer, key) -> None:
         """
           每个B+树节点单独占用一个page
@@ -41,3 +44,45 @@ class BPTreeNode:
         self.size = size
         self.pointer = pointer
         self.key = key
+
+headerMap ={} # index_id:IndexHeader
+pageMap = {} # (index_id, page_id):IndexPage
+
+def get_header_from_file(): #TODO
+    pass
+
+def get_page_from_file(index_id, page_id) -> IndexPage:
+    pageData = BufferManager.fetch_page(index_id + ".db", page_id) 
+    # TODO: 文件名称待确定
+    isRoot = utils.byte_to_bool(pageData.data[0])
+    isLeaf = utils.byte_to_bool(pageData.data[1])
+    father = utils.byte_to_int(pageData.data[2:5])
+    previous = utils.byte_to_int(pageData.data[6:9])
+    nxt = utils.byte_to_int(pageData.data[10:13])
+    size = utils.byte_to_int(pageData.data[14:17])
+    pointer = []
+    for i in range(size):
+        st = 18 + i * 8
+        pointer.append((utils.byte_to_int(pageData.data[st:st + 3]), utils.byte_to_int(pageData.data[st+4:st+7])))
+    key = []
+    # TODO: 添加索引值的种类
+    pageMap[(index_id, page_id)] = IndexPage(next_free_page, is_root, is_leaf, father, previous, next, size, pointer, key)
+    return pageMap[page_id]
+
+def get_node(index_id, page_id) -> BPTreeNode:
+    page = pageMap.get((index_id, page_id))
+    if page == None:
+        page = get_page_from_file(index_id, page_id)
+    return BPTreeNode(index_id, page_id, page.is_root, page.is_leaf, page.father, page.previous, page.next, page.size, page.pointer, page.key)
+
+def get_new_page_id(index_id) -> int:
+    header = headerMap.get(index_id)
+    if header == None:
+        header = get_header_from_file(index_id)
+    return header.first_free_page if header.first_free_page >= 0 else header.size + 1
+
+def updatePage(BPTreeNode) -> None:
+    pass
+
+def freePage(BPTreeNode) -> None:
+    pass
