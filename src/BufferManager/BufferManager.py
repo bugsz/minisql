@@ -9,7 +9,7 @@ PAGE_SIZE = 8192
 
 
 class BufferManager:
-    # TODO 添加新page以及更新header
+    # TODO 是不是要考虑维护一个文件表
     def __init__(self) -> None:
         pass
 
@@ -143,7 +143,6 @@ class BufferManager:
             cls.LRU_replacer.append(block)
             cls.replacer_len += 1
 
-            # TODO 接下来要干什么
             return page_data
         else:
             # 踢出一个victim
@@ -242,5 +241,50 @@ class BufferManager:
             if block.dirty == True:
                 cls.write_back_to_file(block.file_name, block.page_id)
             cls.buffer_blocks.remove(block)
+
+    @classmethod
+    def create_page(cls, file_name) -> PageData:
+        """
+            在文件全满的时候创建一个新页
+            返回PageData类型
+            :param file_name : string
+            :return PageData
+        """
+        file_header = cls._read_file_header(file_name)
+        page_id = file_header.size + 1
+        file_header.size += 1
+        file_header.first_free_page = page_id
+
+        data = bytearray(b"\x00" * 8188)
+        page_data = PageData(0, data)
+        with open(file_name, 'rb+') as f:
+            f.seek(PAGE_SIZE*page_id, 0)
+            f.write(page_data)
+        
+        return cls.fetch_page(file_name, page_id)
+
+    @classmethod
+    def set_header(cls, file_name, header):
+        """
+            重新设置某个文件的文件头
+            :param header : PageHeader
+        """
+        data = utils.int_to_byte(header.first_free_page) \
+             + utils.int_to_byte(header.size) \
+             + header.data
+
+        with open(file_name, "rb+") as f:
+            f.seek(0, 0)
+            f.write(data)
+
+    @classmethod
+    def get_header(cls, file_name):
+        """
+            获取某个文件的文件头
+            :param file_name : string
+            :return PageHeader
+        """
+        return cls._read_file_header(file_name)
+
 if __name__ == "__main__":
     pass
