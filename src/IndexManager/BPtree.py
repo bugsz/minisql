@@ -6,8 +6,8 @@ def binary_find(ls, val) -> int:
     if ls == [] or ls[len(ls) - 1] < val:
         return len(ls)
     l = 0
-    r = len - 1
-    ret = len - 1
+    r = len(ls) - 1
+    ret = len(ls) - 1
     while l <= r:
         mid = (l + r) // 2
         if ls[mid] >= val:
@@ -36,7 +36,7 @@ class BPTree:
         else:
             if rootNode.child[p] == None:
                 rootNode.child[p] = IO.get_node(rootNode.index_id, rootNode.pointer[p][1])
-            newNode = cls.insert(rootNode.child[p], position, value)
+            newNode = cls.insert(order, rootNode.child[p], position, value)
             if newNode != None:
                 rootNode.key[p] = rootNode.child[p].max_key()
                 rootNode.key.insert(p + 1, newNode.max_key())
@@ -49,7 +49,7 @@ class BPTree:
         rootNode, retNode = cls.__split(rootNode)
         if not rootNode.is_root:
             return retNode
-        newNode = BPTreeNode(IO.get_new_page_id(rootNode.index_id), True, False, None, None, None, 2, [], [])
+        newNode = BPTreeNode(rootNode.index_id, IO.get_new_page_id(rootNode.index_id), True, False, -1, 2, [], [])
         retNode.is_root = False
         rootNode.is_root = False
         newNode.pointer = [(0, rootNode.page_id), (0, retNode.page_id)]
@@ -58,6 +58,7 @@ class BPTree:
         IO.update_page(newNode)
         IO.update_page(retNode)
         IO.update_page(rootNode)
+        IO.update_header(newNode.index_id, 1, 0)
         IO.update_header(newNode.index_id, newNode.page_id, 1)
         return None
 
@@ -76,7 +77,7 @@ class BPTree:
             return 1
         if rootNode.child[p] == None:
             rootNode.child[p] = IO.get_node(rootNode.index_id, rootNode.pointer[p][1])
-        ret = cls.delete(rootNode.child[p], value)
+        ret = cls.delete(order, rootNode.child[p], value)
         if ret == 1:
             if rootNode.child[p].size < order // 2:
                 neighbor = p - 1 if p > 0 else 1
@@ -98,6 +99,7 @@ class BPTree:
             if rootNode.is_root and rootNode.size == 1:
                 rootNode.child[p].is_root = True
                 IO.update_page(rootNode.child[p])
+                IO.update_header(rootNode.index_id, -1, 0)
                 IO.update_header(rootNode.index_id, rootNode.pointer[p][1], 1)
                 IO.free_page(rootNode)
             else:

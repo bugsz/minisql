@@ -55,17 +55,17 @@ class IndexManager:
         if header == None:
             header == IO.get_header_from_file(index_id)
         root = IO.get_node(index_id, header.root)
-        leafNode, pos = BPTree.find(root, value)
+        leafNode, k = BPTree.find(root, lower)
         ret = []
         if leafNode == None:
             return ret
         while leafNode != None:
-            k = 0
             while k < leafNode.size and leafNode.key[k] <= upper:
                 ret.append(leafNode.pointer[k])
                 k += 1
             if k == leafNode.size:
                 leafNode = IO.get_node(leafNode.index_id, leafNode.next)
+                k = 0
             else:
                 break
         return ret
