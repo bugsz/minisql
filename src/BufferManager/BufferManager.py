@@ -197,8 +197,7 @@ class BufferManager:
             header_data = f.read(PAGE_SIZE)
             page_header = PageHeader(utils.byte_to_int(header_data[0:4]),
                                      utils.byte_to_int(header_data[4:8]),
-                                     utils.byte_to_int(
-                                         header_data[8:PAGE_SIZE])
+                                     header_data[8:PAGE_SIZE]
                                      )
             return page_header
 
