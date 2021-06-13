@@ -38,12 +38,12 @@ class BPTree:
                 rootNode.child[p] = IO.get_node(rootNode.index_id, rootNode.pointer[p][1])
             newNode = cls.insert(order, rootNode.child[p], position, value)
             if newNode != None:
-                rootNode.key[p] = rootNode.child[p].max_key()
                 rootNode.key.insert(p + 1, newNode.max_key())
                 rootNode.pointer.insert(p + 1, (0, newNode.page_id))
                 rootNode.child.insert(p + 1, newNode)
                 rootNode.size = rootNode.size + 1
                 IO.update_page(rootNode)
+            rootNode.key[p] = rootNode.child[p].max_key()
         if rootNode.size <= order:
             return None
         rootNode, retNode = cls.__split(rootNode)
@@ -79,11 +79,11 @@ class BPTree:
             rootNode.child[p] = IO.get_node(rootNode.index_id, rootNode.pointer[p][1])
         ret = cls.delete(order, rootNode.child[p], value)
         if ret == 1:
-            if rootNode.child[p].size < order // 2:
+            if rootNode.child[p].size < (order + 1) // 2:
                 neighbor = p - 1 if p > 0 else 1
                 if rootNode.child[neighbor] == None:
                     rootNode.child[neighbor] = IO.get_node(rootNode.index_id, rootNode.pointer[neighbor][1])
-                if rootNode.child[neighbor].size > order // 2:
+                if rootNode.child[neighbor].size > (order + 1) // 2:
                     cls.__transfer(rootNode.child[neighbor], rootNode.child[p], -1 if p > 0 else 1)
                     rootNode.key[neighbor] = rootNode.child[neighbor].max_key()
                 else:

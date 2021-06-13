@@ -105,23 +105,26 @@ class IO:
     @classmethod
     def write_page(cls, index_id, page_id, page):
         data = b''
-        data += utils.bool_to_byte(page.is_root)
-        data += utils.bool_to_byte(page.is_leaf)
-        data += utils.int_to_byte(page.next)
-        data += utils.int_to_byte(page.size)
-        for i in range(page.size):
-            data += utils.int_to_byte(page.pointer[i][0])
-            data += utils.int_to_byte(page.pointer[i][1])
-        header = cls.headerMap.get(index_id)
-        if header == None:
-            header = cls.get_header_from_file(index_id)
-        for i in range(page.size):
-            if header.attr_type == 0:
-                data += utils.int_to_byte(page.key[i])
-            elif header.attr_type == 1:
-                data += utils.float_to_byte(page.key[i])
-            else:
-                data += utils.str_to_byte(page.key[i])
+        if page.next_free_page > 0:
+            data = b'\x00' * 8188
+        else:
+            data += utils.bool_to_byte(page.is_root)
+            data += utils.bool_to_byte(page.is_leaf)
+            data += utils.int_to_byte(page.next)
+            data += utils.int_to_byte(page.size)
+            for i in range(page.size):
+                data += utils.int_to_byte(page.pointer[i][0])
+                data += utils.int_to_byte(page.pointer[i][1])
+            header = cls.headerMap.get(index_id)
+            if header == None:
+                header = cls.get_header_from_file(index_id)
+            for i in range(page.size):
+                if header.attr_type == 0:
+                    data += utils.int_to_byte(page.key[i])
+                elif header.attr_type == 1:
+                    data += utils.float_to_byte(page.key[i])
+                else:
+                    data += utils.str_to_byte(page.key[i])
         BufferManager.set_page("index" + str(index_id) + ".db", page_id, PageData(page.next_free_page, data))
 
     @classmethod
@@ -141,9 +144,7 @@ class IO:
         if header.first_free_page == -1:
             BufferManager.create_page("index" + str(index_id) + ".db")
             return header.size + 1
-        page = cls.pageMap.get((index_id, header.first_free_page))
-        if page == None:
-            page = cls.get_page_from_file((index_id, header.first_free_page))
+        page = cls.get_page_from_file(index_id, header.first_free_page)
         ret = header.first_free_page
         header.first_free_page = page.next_free_page
         page.next_free_page = -1
