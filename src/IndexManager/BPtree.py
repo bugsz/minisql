@@ -2,13 +2,11 @@ from IndexMananger.indexDS import *
 import copy
 
 class BPTreeNode:
-    def __init__(self, index_id, page_id, is_root, is_leaf, father, previous, next, size, pointer, key) -> None:
+    def __init__(self, index_id, page_id, is_root, is_leaf, next, size, pointer, key) -> None:
         self.index_id = index_id
         self.page_id = page_id
         self.is_root = is_root
         self.is_leaf = is_leaf
-        self.father = father
-        self.previous = previous
         self.next = next
         self.size = size
         self.pointer = pointer
@@ -43,13 +41,13 @@ class BPTree:
         """
             向该子树中插入值为value/物理位置为position=(rid,pid)的record
             返回split后新增Node, 未split则为None
-            若root split则返回新的根
         """
         p = binary_find(rootNode.key[0:size - (0 if rootNode.isLeaf else 1)], value)
         if rootNode.is_leaf:
             rootNode.key.insert(p, value)
             rootNode.pointer.insert(p, position)
             rootNode.size = rootNode.size + 1
+            update_page(rootNode)
         else:
             if rootNode.child[p] == None:
                 rootNode.child[p] = get_node(rootNode.index_id, rootNode.pointer[p][1])
@@ -60,6 +58,7 @@ class BPTree:
                 rootNode.pointer.insert(p + 1, (0, newNode.page_id))
                 rootNode.child.insert(p + 1, newNode)
                 rootNode.size = rootNode.size + 1
+                update_page(rootNode)
         if rootNode.size <= order:
             return None
         rootNode, retNode = __split(rootNode)
@@ -68,17 +67,17 @@ class BPTree:
         newNode = BPTreeNode(get_new_page_id(rootNode.index_id), True, False, None, None, None, 2, [], [])
         retNode.is_root = False
         rootNode.is_root = False
-        #TODO: maintain father
         newNode.pointer = [(0, rootNode.page_id), (0, retNode.page_id)]
         newNode.key = [rootNode.max_key(), retNode.max_key()]
         newNode.child = [rootNode, retNode]
-        return newNode
+        update_page(newNode)
+        update_page(retNode)
+        update_page(rootNode)
+        update_header(newNode.index_id, newNode.page_id, 1)
+        return None
 
     @classmethod
     def delete(cls, order, rootNode, value) -> int:
-        """
-            TODO
-        """
         p = binary_find(rootNode.key, value)
         if p == len(rootNode.key):
             return -1
@@ -88,31 +87,36 @@ class BPTree:
             del rootNode.key[p]
             del rootNode.pointer[p]
             rootNode.size = rootNode.size - 1
+            update_page(rootNode)
             return 1
         if rootNode.child[p] == None:
             rootNode.child[p] = get_node(rootNode.index_id, rootNode.pointer[p][1])
         ret = delete(rootNode.child[p], value)
         if ret == 1:
-            if rootNode.child[p].size == 0: # only when rootNode is the root
-                rootNode.key = rootNode.pointer = rootNode.child = []
+            if rootNode.child[p].size < order // 2:
+                neighbor = p - 1 if p > 0 else 1
+                if rootNode.child[neighbor] == None:
+                    rootNode.child[neighbor] = get_node(rootNode.index_id, rootNode.pointer[neighbor][1])
+                if rootNode.child[neighbor].size > order // 2:
+                    __transfer(rootNode.child[neighbor], rootNode.child[p], -1 if p > 0 else 1)
+                    rootNode.key[neighbor] = rootNode.child[neighbor].max_key()
+                else:
+                    if p == 0:
+                        p, neighbor = neighbor, p
+                    __merge(rootNode.child[neighbor], rootNode.child[p])
+                    del rootNode.key[p]
+                    del rootNode.pointer[p]
+                    rootNode.child[p] = None
+                    rootNode.size = rootNode.size - 1
+                    p = neighbor
+            rootNode.key[p] = rootNode.child[p].max_key()
+            if rootNode.is_root and rootNode.size == 1:
+                rootNode.child[p].is_root = True
+                update_page(rootNode.child[p])
+                update_header(rootNode.index_id, rootNode.pointer[p][1], 1)
+                free_page(rootNode)
             else:
-                if rootNode.child[p].size < order // 2:
-                    neighbor = p - 1 if p > 0 else 1
-                    if rootNode.child[neighbor] == None:
-                        rootNode.child[neighbor] = get_node(rootNode.index_id, rootNode.pointer[neighbor][1])
-                    if rootNode.child[neighbor].size > order // 2:
-                        __transfer(rootNode.child[neighbor], rootNode.child[p], -1 if p > 0 else 1)
-                        rootNode.key[neighbor] = rootNode.child[neighbor].max_key()
-                    else:
-                        if p == 0:
-                            p, neighbor = neighbor, p
-                        __merge(rootNode.child[neighbor], rootNode.child[p])
-                        del rootNode.key[p]
-                        del rootNode.pointer[p]
-                        rootNode.child[p] = None
-                        rootNode.size = rootNode.size - 1
-                        p = neighbor
-                rootNode.key[p] = rootNode.child[p].max_key()
+                update_page(rootNode)
         return ret        
 
     @classmethod
@@ -140,10 +144,7 @@ class BPTree:
         retNode = copy.deepcopy(rootNode)                   # retNode is the right one while rootNode stays left
         retNode.page_id = get_new_page_id(rootNode.index_id)
         if retNode.is_leaf:
-            rootNode.next.previous = retNode.page_id
             rootNode.next = retNode.page_id
-            retNode.previous = rootNode.page_id
-            # TODO: 能不能改成单向链表？
         rootNode.size = mid
         retNode.size = retNode.size - mid
         rootNode.pointer = rootNode.pointer[0:mid]
@@ -152,8 +153,9 @@ class BPTree:
         retNode.key = retNode.key[mid:]
         rootNode.child = rootNode.child[0:mid]
         retNode.child = retNode.child[mid:]
-        updatePage(rootNode)
-        updatePage(retNode)
+        update_page(rootNode)
+        update_page(retNode)
+        update_header(rootNode.index_id, 1, 0)
         return [rootNode, retNode]
 
     @classmethod
@@ -167,7 +169,6 @@ class BPTree:
             del srcNode.key[srcNode.size - 1]
             del srcNode.child[srcNode.size - 1]
             srcNode.size -= 1
-            #TODO: maintain father
         else:
             desNode.pointer.append(srcNode.pointer[0])
             desNode.key.append(srcNode.key[0])
@@ -182,11 +183,10 @@ class BPTree:
     def __merge(cls, leftNode, rightNode):
         if rightNode.is_leaf:
             leftNode.next = rightNode.next
-            rightNode.next.previous = leftNode.page_id
-            #TODO: single link?
         leftNode.size += rightNode.size
         leftNode.key += rightNode.key
         leftNode.pointer += rightNode.pointer
         leftNode.child += rightNode.child
-        updatePage(leftNode)
-        freePage(rightNode)
+        update_page(leftNode)
+        free_page(rightNode)
+        update_header(leftNode.index_id, -1, 0)
