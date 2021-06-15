@@ -25,7 +25,7 @@ class IndexManager:
         """
         header = IO.headerMap.get(index_id)
         if header == None:
-            header == IO.get_header_from_file(index_id)
+            header = IO.get_header_from_file(index_id)
         root = IO.get_node(index_id, header.root)
         return BPTree.delete(header.order, root, value)
 
@@ -37,7 +37,7 @@ class IndexManager:
         """
         header = IO.headerMap.get(index_id)
         if header == None:
-            header == IO.get_header_from_file(index_id)
+            header = IO.get_header_from_file(index_id)
         root = IO.get_node(index_id, header.root)
         leafNode, pos = BPTree.find(root, value)
         if leafNode != None and leafNode.key[pos] == value:
@@ -53,7 +53,7 @@ class IndexManager:
         """
         header = IO.headerMap.get(index_id)
         if header == None:
-            header == IO.get_header_from_file(index_id)
+            header = IO.get_header_from_file(index_id)
         root = IO.get_node(index_id, header.root)
         leafNode, k = BPTree.find(root, lower)
         ret = []
