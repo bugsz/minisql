@@ -1,4 +1,4 @@
-from IndexManager.indexDS import IO
+from IndexManager.indexDS import BM_IO as IO
 from IndexManager.BPTree import BPTree
 from utils import utils
 
