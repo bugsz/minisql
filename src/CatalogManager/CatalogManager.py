@@ -5,8 +5,11 @@ class CatalogManager:
     def __init__(self):
         pass
 
+    table_idx = {}
+    index_idx = {}
+
     @classmethod
-    def initialize():
+    def initialize(cls):
         """
         启动程序时调用
         """
@@ -18,12 +21,27 @@ class CatalogManager:
             CM_IO.update_header(MetaType.index, MetaHeader(-1, 0, 0, 268, 30))
 
     @classmethod
-    def create_table(table_name, attr_num, pk_id, attrs) -> int:
+    def table_exist(cls, table_name) -> bool:
+        pass
+
+    @classmethod
+    def index_exist(cls, index_name) -> bool:
+        pass
+
+    @classmethod
+    def attr_exist(cls, table_name, attr_name) -> bool:
+        pass
+
+    @classmethod
+    def attr_unique(cls, table_name, attr_name) -> bool:
+        pass
+
+    @classmethod
+    def create_table(cls, table_name, attr_num, pk_id, attrs):
         """
         : param 表名，属性个数，主键（0~31），属性列表
                 attrs包含3元组(attr_name, attr_type, unique)
-                attr_type:  0:int / 1:float / other:char(x-1)
-        : return 0:success / 1:pk is not unique 
+                attr_type:  class VALUETYPE
         """
         if not attrs[pk_id][2]:
             return 1
@@ -48,21 +66,20 @@ class CatalogManager:
         return 0
 
     @classmethod
-    def create_index(index_name, table_name, attr_name):
+    def create_index(cls, index_name, table_name, attr_name):
         """
-        : return  0:success / 1: attr is not unique
         可能要由API手动做一下insert，这里访问不到record
         """
         pass
 
     @classmethod
-    def __create_attr():
+    def drop_table(cls, table_name): 
         pass
 
     @classmethod
-    def drop_table(table_name): # TODO: 会失败吗？
+    def drop_index(cls, index_name):
         pass
 
     @classmethod
-    def drop_index(index_name):
+    def __create_attr(cls):
         pass
