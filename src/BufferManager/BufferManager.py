@@ -197,8 +197,7 @@ class BufferManager:
             header_data = f.read(PAGE_SIZE)
             page_header = PageHeader(utils.byte_to_int(header_data[0:4]),
                                      utils.byte_to_int(header_data[4:8]),
-                                     utils.byte_to_int(
-                                         header_data[8:PAGE_SIZE])
+                                     header_data[8:PAGE_SIZE]
                                      )
             return page_header
 
@@ -255,11 +254,11 @@ class BufferManager:
         file_header.size += 1
         file_header.first_free_page = page_id
 
-        data = bytearray(b"\x00" * 8188)
-        page_data = PageData(0, data)
+        data = bytearray(b"\xff\xff\xff\xff" + b"\x00" * 8188)
+        # page_data = PageData(0, data)
         with open(file_name, 'rb+') as f:
             f.seek(PAGE_SIZE*page_id, 0)
-            f.write(page_data)
+            f.write(data)
         
         return cls.fetch_page(file_name, page_id)
 
