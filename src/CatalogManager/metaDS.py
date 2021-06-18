@@ -106,7 +106,7 @@ class CM_IO:
         return cls.pageMap[(meta_type, page_id)]
 
     @classmethod
-    def write_header(cls, meta_type, header):
+    def __write_header(cls, meta_type, header):
         data = b''
         data += utils.int_to_byte(header.record_num)
         data += utils.int_to_byte(header.record_length)
@@ -114,7 +114,7 @@ class CM_IO:
         BufferManager.set_header("meta" + str(meta_type.value) + ".db", PageHeader(header.first_free_page, header.size, data))
 
     @classmethod
-    def write_page(cls, meta_type, page_id, page):
+    def __write_page(cls, meta_type, page_id, page):
         # if page.next_free_page > 0:
         #     page.data = b'\x00' * 8188
         BufferManager.set_page("meta" + str(meta_type.value) + ".db", page_id, page)
@@ -156,7 +156,7 @@ class CM_IO:
                 return MetaIndex(index_id, index_name, table_id, attr_id, valid)
     
     @classmethod
-    def encode_page(cls, meta_type, page_id, record_id, content):
+    def __encode_page(cls, meta_type, page_id, record_id, content):
         page = cls.pageMap.get((meta_type, page_id))
         if page == None:
             page = cls.get_page_from_file(meta_type, page_id)
@@ -187,24 +187,54 @@ class CM_IO:
             return page
             
     @classmethod
-    def get_new_page_id(cls, meta_type) -> int:
+    def get_free_pos(cls, meta_type):
         header = cls.headerMap.get(meta_type)
         if header == None:
             header = cls.get_header_from_file(meta_type)
         if header.first_free_page == -1:
-            BufferManager.create_page("meta" + str(meta_type.value) + ".db")
-            return header.size + 1
-        return header.first_free_page
+            return (cls.__get_new_page_id(meta_type), 0)
+        pos = None
+        cnt = 0
+        if meta_type != MetaType.attr:
+            for i in range(header.page_capacity):
+                record = cls.decode_page(meta_type, header.first_free_page, i)
+                if not record.valid:
+                    cnt += 1
+                    pos = i
+            if cnt > 1:
+                return (header.first_free_page, pos)
+        page = cls.pageMap.get((meta_type, header.first_free_page))
+        if page == None:
+            page = cls.get_page_from_file(meta_type, header.first_free_page)
+        ret = header.first_free_page
+        header.first_free_page = page.next_free_page
+        page.next_free_page = -1
+        cls.pageMap[(meta_type, page_id)] = page
+        cls.__write_page(meta_type, header.size, page)
+        cls.update_header(meta_type, header)
+        return (ret, pos)
+
+    @classmethod
+    def __get_new_page_id(cls, meta_type) -> int:
+        header = cls.headerMap.get(meta_type)
+        if header == None:
+            header = cls.get_header_from_file(meta_type)
+        BufferManager.create_page("meta" + str(meta_type.value) + ".db")
+        header.size += 1
+        if meta_type != MetaType.attr:
+            page = cls.get_page_from_file(meta_type, header.size)
+            page.next_free_page = header.first_free_page
+            header.first_free_page = header.size
+            cls.pageMap[(meta_type, page_id)] = page
+            cls.__write_page(meta_type, header.size, page)
+        cls.update_header(meta_type, header)
+        return header.size
 
     @classmethod
     def update_page(cls, meta_type, page_id, record_id, content) -> None:
-        page = cls.encode_page(meta_type, page_id, record_id, content)
+        page = cls.__encode_page(meta_type, page_id, record_id, content)
         cls.pageMap[(meta_type, page_id)] = page
-        cls.write_page(meta_type, page_id, page)
-
-    @classmethod
-    def free_record(cls, meta_type, page_id, record_id):
-        pass
+        cls.__write_page(meta_type, page_id, page)
 
     @classmethod
     def free_page(cls, meta_type, page_id) -> None:
@@ -216,10 +246,10 @@ class CM_IO:
             header = cls.get_header_from_file(meta_type)
         page.next_free_page = header.first_free_page
         header.first_free_page = page_id
-        cls.write_page(meta_type, page_id, page)
-        cls.write_header(meta_type, header)
+        cls.__write_page(meta_type, page_id, page)
+        cls.__write_header(meta_type, header)
 
     @classmethod
     def update_header(cls, meta_type, header):
         cls.headerMap[meta_type] = header
-        cls.write_header(meta_type, header)
+        cls.__write_header(meta_type, header)

@@ -251,8 +251,8 @@ class BufferManager:
         """
         file_header = cls._read_file_header(file_name)
         page_id = file_header.size + 1
-        file_header.size += 1
-        file_header.first_free_page = page_id
+        # file_header.size += 1
+        # file_header.first_free_page = page_id
 
         data = bytearray(b"\xff\xff\xff\xff" + b"\x00" * 8188)
         # page_data = PageData(0, data)
