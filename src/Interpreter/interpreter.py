@@ -1,3 +1,4 @@
+import os
 from interpreterDS import VALUETYPE
 from interpreterDS import ReturnValue, ACTIONTYPE, CONDITION
 from ply import yacc, lex
@@ -114,6 +115,8 @@ condition = []
 # column_data = interpreterDS.ColumnData()
 column_data = []
 return_value = ReturnValue()
+execfile = 0
+execfile_name = ""
 
 def reset():
     global condition, column_data, return_value
@@ -282,7 +285,12 @@ def p_expression_quit(p):
     exit(0)
 
 def p_expression_execfile(p):
-    '''exp_execfile : EXECFILE'''
+    '''exp_execfile : EXECFILE COLUMN_OR_TABLE END'''
+    global execfile, execfile_name
+    execfile = 1
+    execfile_name = p[2]
+    # print(execfile, execfile_name)
+
 
 def p_error(p):
     if p:
@@ -327,12 +335,42 @@ def check_create_table(return_value):
 def check_create_index(return_value):
     pass
 
-while True:
-    data = input("minisql>")
-    reset()
-    while(";" not in data):
-        data = data + input()
-    # print(data)
-    parser = yacc.yacc()
-    res = parser.parse(data)
-    # print(return_value.action_type)
+parser = yacc.yacc()
+
+def interpret():
+    global execfile, execfile_name
+    
+    while True:
+        if execfile == 0:
+            data = input("minisql>")
+            reset()
+            while ";" not in data:
+                data = data + input()
+            # print(data)
+            
+            res = parser.parse(data)
+        
+        else:
+            if not os.path.exists(execfile_name):
+                print("File does not exist!")
+                return -1
+
+            with open(execfile_name, "r") as f:
+                while True:
+                    data = ""
+                    new_line = f.readline()
+                    if not new_line:
+                        return 0
+                    
+                    reset()
+                    while ";" not in data:
+                        if not new_line:
+                            print("No end token found!")
+                            return -1
+                        data += new_line
+                        new_line = f.readline()
+
+                    print(data)
+                    res = parser.parse(data)                    
+
+interpret()              

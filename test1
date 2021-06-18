@@ -1,0 +1,4 @@
+create table t1(
+     t1 char(55) unique, 
+     t2 int
+)
