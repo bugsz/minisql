@@ -44,7 +44,7 @@ class IndexPage:
         self.pointer = pointer
         self.key = key
 
-class IO:
+class BM_IO:
     def __init__(self):
         pass
 
