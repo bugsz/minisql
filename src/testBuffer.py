@@ -57,6 +57,13 @@ def test_buffer():
     BufferManager.remove_file(FILENAME)
     print(len(BufferManager.buffer_blocks))
 
+def test_create_file():
+    ret = BufferManager.create_file("test1.db")
+    header = BufferManager._read_file_header("test1.db")
+    print(ret)
+    print(header.first_free_page)
+    print(header.data)
+    pass
 """
     已测试：
         fetch_page
@@ -67,8 +74,9 @@ def test_buffer():
         _search_buffer_block
         _read_file_header
         write_back_to_file
+        create_file
 """
         
     
-
-test_buffer()
+test_create_file()
+# test_buffer()

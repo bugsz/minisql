@@ -285,5 +285,24 @@ class BufferManager:
         """
         return cls._read_file_header(file_name)
 
+    @classmethod
+    def create_file(cls, file_name):
+        """
+            创建新文件，创建成功返回0
+            文件有文件头，但没有可用page
+        """
+        if os.path.exists(file_name):
+            print("File {} exists!".format(file_name))
+            return -1
+        
+        with open(file_name, "w") as f:
+            pass
+
+        file_header = PageHeader(0, 0, bytearray(b'\x00'*8184))
+        cls.set_header(file_name, file_header)
+        
+        return 0
+    
+
 if __name__ == "__main__":
     pass
