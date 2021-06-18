@@ -1,7 +1,9 @@
 import os
-from interpreterDS import VALUETYPE
-from interpreterDS import ReturnValue, ACTIONTYPE, CONDITION
+from utils.utils import ACTIONTYPE, CONDITION, VALUETYPE
+from Interpreter.interpreterDS import ReturnValue
 from ply import yacc, lex
+from API import API 
+from prettytable import PrettyTable
 
 
 tokens = (
@@ -79,7 +81,7 @@ t_COMPARATOR = r"[<>=]{1,2}"
 
 
 def t_COLUMN_OR_TABLE(t):
-    r'[a-zA-Z0-9/.-]+'
+    r"[\'a-zA-Z0-9/.-]+"
     if t.value.upper() in tokens:
         t.type = t.value.upper()
     # TODO
@@ -101,7 +103,7 @@ lexer = lex.lex()
 
 test_lex = "insert into t1 values"
 test_lex = "where a<>1 and b < 1"
-test_lex = "select * from t1 where a = 1 and b = 1"
+test_lex = "select * from t1 where a = '1' and b = 1"
 lexer.input(test_lex)
 while True:
     tok = lexer.token()
@@ -141,12 +143,13 @@ def p_expression_create(p):
         return_value.action_type = ACTIONTYPE.CREATE_TABLE
         return_value.table_name = p[3]
         if check_create_table(return_value):
-            pass
-            # TODO API.api_create_table()
+            API.api_create_table(return_value)
 
     elif p[2] in ['index', 'index']:
         return_value.action_type = ACTIONTYPE.CREATE_INDEX
         return_value.index_name = p[3]
+        return_value.table_name = p[5]
+        return_value.attr_name = p[7]
         if check_create_index(return_value):
             pass
             # TODO API.api_create_index
@@ -217,12 +220,12 @@ def p_expression_drop(p):
     if p[2] in ['table', "TABLE"]:
         return_value.action_type = ACTIONTYPE.DROP_TABLE
         return_value.table_name = p[3]
-        # TODO drop_table
+        API.api_drop_table(return_value.table_name)
         pass
     elif p[2] in ['index', "INDEX"]:
         return_value.action_type = ACTIONTYPE.DROP_INDEX
         return_value.index_name = p[3]
-        # TODO drop_index
+        API.api_drop_index(return_value.index_name)
         pass
     else:
         print("invalid command {}".format(p[2]))
@@ -234,6 +237,8 @@ def p_expression_select(p):
     global return_value
     return_value.action_type = ACTIONTYPE.SELECT_STAR
     return_value.table_name = p[4]
+
+    select_result = API.api_select(return_value)
     # TODO select api
 
 def p_expression_delete(p):
@@ -242,6 +247,8 @@ def p_expression_delete(p):
     global return_value
     return_value.action_type = ACTIONTYPE.DELETE
     return_value.table_name = p[3]
+
+    delete_result = API.api_delete(return_value)
     # TODO delete api
     pass
 
@@ -251,7 +258,8 @@ def p_expression_insert(p):
     global column_data
 
     return_value.return_type = ACTIONTYPE.INSERT
-    return_value.values.append(column_data)
+    
+    API.api_insert(return_value)
     # TODO insert API
 
 
@@ -262,7 +270,8 @@ def p_expression_columns(p):
     '''columns : COLUMN_OR_TABLE
                | COLUMN_OR_TABLE COMMA columns'''
     # 这个是倒序进入的
-    column_data.append(p[1])
+    global return_value
+    return_value.column_data.append(p[1])
 
 def p_expression_condition(p):
     '''exp_condition : WHERE exp_all_conditions END'''
