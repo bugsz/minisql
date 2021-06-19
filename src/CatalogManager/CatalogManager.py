@@ -1,6 +1,7 @@
-from metaDS import *  # TODO
+from CatalogManager.metaDS import *
 from BufferManager.BufferManager import BufferManager
 from BufferManager.bufferDS import PageHeader, PageData
+from utils import utils
 
 class CatalogManager:
     def __init__(self):
@@ -26,7 +27,7 @@ class CatalogManager:
         while cnt < header.record_num:
             for i in range(header.page_capacity):
                 record = CM_IO.decode_page(MetaType.table, page_id, i)
-                if record.valid:
+                if record != None:
                     cls.table_dict[record.table_name] = (page_id - 1) * 30 + i
                     cnt += 1
             page_id += 1
@@ -36,7 +37,7 @@ class CatalogManager:
         while cnt < header.record_num:
             for i in range(header.page_capacity):
                 record = CM_IO.decode_page(MetaType.index, page_id, i)
-                if record.valid:
+                if record != None:
                     cls.index_dict[record.index_name] = (page_id - 1) * 30 + i
                     cnt += 1
             page_id += 1
@@ -118,6 +119,7 @@ class CatalogManager:
         if header == None:
             header = CM_IO.get_header_from_file(MetaType.attr)
         record_len = 0
+        data = b''
         for i in range(attr_num):
             type = 0
             if attrs[i][1] == utils.VALUETYPE.FLOAT:
@@ -125,13 +127,14 @@ class CatalogManager:
             elif attrs[i][1] == utils.VALUETYPE.CHAR:
                 type = attrs[i][2] + 1
             record_len += attrs[i][2]
+            data += utils.int_to_byte(type)
             attr = MetaAttr(attrs[i][0], type, -1, attrs[i][3])
             CM_IO.update_page(MetaType.attr, record.attr_page_id, i, attr)
 
-        BufferManager.create_file("record" + str(record.table_id) + "db")
-        # TODO
-        # header = RecordHeader(-1, 0, 0, record_len, (utils.PAGE_SIZE - 4) // record_len)
-        # BufferManager.set_header("record" + str(record.table_id) + "db", header)
+        BufferManager.create_file("record" + str(record.table_id) + ".db")
+        data = utils.int_to_byte(0) + utils.int_to_byte(record_len) +\
+               utils.int_to_byte((utils.PAGE_SIZE - 4) // record_len) + utils.int_to_byte(attr_num) + data
+        BufferManager.set_header("record" + str(record.table_id) + ".db", PageHeader(-1, 0, data))
 
     @classmethod
     def create_index(cls, index_name, table_name, attr_name):
@@ -143,23 +146,23 @@ class CatalogManager:
             header = CM_IO.get_header_from_file(MetaType.index)
         page_id, pos = CM_IO.get_free_pos(MetaType.index)
         table_id = cls.get_table_id(table_name)
-        attr_id, attr_type = cls.__get_attr_id(table_id, attr_name)
+        attr_id, attr_type = cls.get_attr_id(table_id, attr_name)
         record = MetaIndex(header.page_capacity * (page_id - 1) + pos, index_name, table_id, attr_id, True)
         CM_IO.update_page(MetaType.index, page_id, pos, record)
         cls.index_dict[record.index_name] = record.index_id
         header.record_num += 1
         CM_IO.update_header(MetaType.index, header)
-        BufferManager.create_file("index" + str(record.index_id) + "db")
+        BufferManager.create_file("index" + str(record.index_id) + ".db")
         attr_len = 4 if attr_type < 2 else attr_type - 1
         order = min(400, (utils.PAGE_SIZE - 4) // attr_len)
-        BufferManager.set_header("index" + str(record.index_id) + "db", PageHeader(-1, 0, utils.int_to_byte(record.index_id)\
+        BufferManager.set_header("index" + str(record.index_id) + ".db", PageHeader(-1, 0, utils.int_to_byte(record.index_id)\
                                                                                         + utils.int_to_byte(table_id)\
                                                                                         + utils.int_to_byte(attr_id)\
                                                                                         + utils.int_to_byte(attr_type)\
                                                                                         + utils.int_to_byte(order)\
                                                                                         + utils.int_to_byte(1)))
-        BufferManager.create_page("index" + str(record.index_id) + "db")
-        BufferManager.set_page("index" + str(record.index_id) + "db", 1, PageData(-1, utils.bool_to_byte(True)\
+        BufferManager.create_page("index" + str(record.index_id) + ".db")
+        BufferManager.set_page("index" + str(record.index_id) + ".db", 1, PageData(-1, utils.bool_to_byte(True)\
                                                                                    + utils.bool_to_byte(True)\
                                                                                    + utils.int_to_byte(-1)\
                                                                                    + utils.int_to_byte(0)))
@@ -179,7 +182,7 @@ class CatalogManager:
             CM_IO.free_page(MetaType.table, page_id)
         del cls.table_dict[table_name]
         CM_IO.free_page(MetaType.attr, table.attr_page_id)
-        BufferManager.remove_file("record" + str(table.table_id) + "db")
+        BufferManager.remove_file("record" + str(table.table_id) + ".db")
 
     @classmethod
     def drop_index(cls, index_name):
@@ -195,7 +198,7 @@ class CatalogManager:
         if page.next_free_page == -1:
             CM_IO.free_page(MetaType.index, page_id)
         del cls.index_dict[index_name]
-        BufferManager.remove_file("index" + str(index.index_id) + "db")
+        BufferManager.remove_file("index" + str(index.index_id) + ".db")
 
     @classmethod
     def find_indexes(cls, table_name):
@@ -212,11 +215,11 @@ class CatalogManager:
             index = CM_IO.decode_page(MetaType.index, page_id, record_id)
             if index.table_id == table_id:
                 attr = CM_IO.decode_page(MetaType.attr, table.attr_page_id, index.attr_id)
-                ret.append(index.index_id, attr.attr_name)
+                ret.append((index.index_id, attr.attr_name))
         return ret
 
     @classmethod
-    def __get_attr_id(cls, table_id, attr_name):
+    def get_attr_id(cls, table_id, attr_name):
         table = CM_IO.decode_page(MetaType.table, table_id // 30 + 1, table_id % 30)
         for i in range(table.attr_num):
             attr = CM_IO.decode_page(MetaType.attr, table.attr_page_id, i)

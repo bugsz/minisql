@@ -50,7 +50,6 @@ class MetaTable:
         self.attr_page_id = attr_page_id
         self.attr_num = attr_num
         self.table_name = table_name
-        self.attrs = []
         self.valid = valid
 
 class MetaAttr:
@@ -82,6 +81,7 @@ class MetaIndex:
         self.index_name = index_name
         self.table_id = table_id
         self.attr_id = attr_id
+        self.valid = valid
 
 class CM_IO:
     def __init__(self):
@@ -100,7 +100,7 @@ class CM_IO:
         return cls.headerMap[meta_type]
 
     @classmethod
-    def get_page_from_file(cls, meta_type, page_id) -> MetaPage:
+    def get_page_from_file(cls, meta_type, page_id):
         pageData = BufferManager.fetch_page("meta" + str(meta_type.value) + ".db", page_id)
         cls.pageMap[(meta_type, page_id)] = pageData
         return cls.pageMap[(meta_type, page_id)]
@@ -131,7 +131,8 @@ class CM_IO:
             attr_page_id = utils.byte_to_int(page.data[pos+8:pos+12])
             attr_num = utils.byte_to_int(page.data[pos+12:pos+16])
             table_name = utils.byte_to_str(page.data[pos+16:pos+271])
-            valid = utils.byte_to_bool(page.data[pos+271])
+            table_name = table_name.rstrip('\x00')
+            valid = utils.byte_to_bool(page.data[pos+271:pos+272])
             if not valid:
                 return None
             else:
@@ -139,17 +140,19 @@ class CM_IO:
         elif meta_type == MetaType.attr:
             pos = record_id * 255
             attr_name = utils.byte_to_str(page.data[pos:pos+246])
+            attr_name = attr_name.rstrip('\x00')
             attr_type = utils.byte_to_int(page.data[pos+246:pos+250])
             index_id = utils.byte_to_int(page.data[pos+250:pos+254])
-            unique = utils.byte_to_bool(page.data[pos+254])
+            unique = utils.byte_to_bool(page.data[pos+254:pos+255])
             return MetaAttr(attr_name, attr_type, index_id, unique)
         else:
             pos = record_id * 268
             index_id = utils.byte_to_int(page.data[pos:pos+4])
             index_name = utils.byte_to_str(page.data[pos+4:pos+259])
+            index_name = index_name.rstrip('\x00')
             table_id = utils.byte_to_int(page.data[pos+259:pos+263])
             attr_id = utils.byte_to_int(page.data[pos+263:pos+267])
-            valid = utils.byte_to_bool(page.data[pos+267])
+            valid = utils.byte_to_bool(page.data[pos+267:pos+268])
             if not valid:
                 return None
             else:
@@ -167,11 +170,13 @@ class CM_IO:
             data += utils.int_to_byte(content.attr_page_id)
             data += utils.int_to_byte(content.attr_num)
             data += utils.str_to_byte(content.table_name)
+            data += b'\x00' * (255 - len(content.table_name))
             data += utils.bool_to_byte(content.valid)
             page.data[record_id * 272: (record_id + 1) * 272] = data
             return page
         elif meta_type == MetaType.attr:
             data += utils.str_to_byte(content.attr_name)
+            data += b'\x00' * (246 - len(content.attr_name))
             data += utils.int_to_byte(content.attr_type)
             data += utils.int_to_byte(content.index_id)
             data += utils.bool_to_byte(content.unique)
@@ -180,6 +185,7 @@ class CM_IO:
         else:
             data += utils.int_to_byte(content.index_id)
             data += utils.str_to_byte(content.index_name)
+            data += b'\x00' * (255 - len(content.index_name))
             data += utils.int_to_byte(content.table_id)
             data += utils.int_to_byte(content.attr_id)
             data += utils.bool_to_byte(content.valid)
@@ -198,9 +204,10 @@ class CM_IO:
         if meta_type != MetaType.attr:
             for i in range(header.page_capacity):
                 record = cls.decode_page(meta_type, header.first_free_page, i)
-                if not record.valid:
+                if record == None:
                     cnt += 1
-                    pos = i
+                    if pos == None:
+                        pos = i
             if cnt > 1:
                 return (header.first_free_page, pos)
         page = cls.pageMap.get((meta_type, header.first_free_page))
@@ -225,7 +232,7 @@ class CM_IO:
             page = cls.get_page_from_file(meta_type, header.size)
             page.next_free_page = header.first_free_page
             header.first_free_page = header.size
-            cls.pageMap[(meta_type, page_id)] = page
+            cls.pageMap[(meta_type, header.size)] = page
             cls.__write_page(meta_type, header.size, page)
         cls.update_header(meta_type, header)
         return header.size
