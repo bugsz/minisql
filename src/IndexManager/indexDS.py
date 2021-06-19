@@ -86,7 +86,9 @@ class BM_IO:
                 key.append(utils.byte_to_float(pageData.data[st:st + 4]))
                 st += 4
             else:
-                key.append(utils.byte_to_str(pageData.data[st: st + header.attr_type - 1]))
+                str = utils.byte_to_str(pageData.data[st: st + header.attr_type - 1])
+                str = str.rstrip('\x00')
+                key.append(str)
                 st += header.attr_type - 1
         cls.pageMap[(index_id, page_id)] = IndexPage(pageData.next_free_page, isRoot, isLeaf, nxt, size, pointer, key)
         return cls.pageMap[(index_id, page_id)]
@@ -125,6 +127,7 @@ class BM_IO:
                     data += utils.float_to_byte(page.key[i])
                 else:
                     data += utils.str_to_byte(page.key[i])
+                    data += b'\x00' * (header.attr_type - 1 - len(page.key[i]))
         BufferManager.set_page("index" + str(index_id) + ".db", page_id, PageData(page.next_free_page, data))
 
     @classmethod

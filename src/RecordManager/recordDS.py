@@ -91,7 +91,7 @@ class RM_IO:
         if header == None:
             header = cls.get_header_from_file(table_id)
         pos = record_id * header.record_length
-        valid = utils.byte_to_bool(page.data[pos])
+        valid = utils.byte_to_bool(page.data[pos:pos+1])
         pos += 1
         if not valid:
             return None
@@ -106,7 +106,9 @@ class RM_IO:
                     value.append(utils.byte_to_float(page.data[pos:pos+4]))
                     pos += 4
                 else:
-                    value.append(utils.byte_to_str(page.data[pos:pos+type-1]))
+                    str = utils.byte_to_str(page.data[pos:pos+type-1])
+                    str = str.rstrip('\x00')
+                    value.append(str)
                     pos += type - 1
             return Record(valid, value)
     
@@ -128,6 +130,7 @@ class RM_IO:
                 data += utils.float_to_byte(content.value[i])
             else:
                 data += utils.str_to_byte(content.value[i])
+                data += b'\x00' * (type - 1 - len(content.value[i]))
         page.data[record_id * header.record_length: (record_id + 1) * header.record_length] = data
         return page
             
