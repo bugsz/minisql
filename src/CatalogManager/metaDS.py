@@ -214,10 +214,10 @@ class CM_IO:
         if page == None:
             page = cls.get_page_from_file(meta_type, header.first_free_page)
         ret = header.first_free_page
-        header.first_free_page = page.next_free_page
         page.next_free_page = -1
-        cls.pageMap[(meta_type, page_id)] = page
-        cls.__write_page(meta_type, header.size, page)
+        cls.pageMap[(meta_type, ret)] = page
+        cls.__write_page(meta_type, ret, page)
+        header.first_free_page = page.next_free_page
         cls.update_header(meta_type, header)
         return (ret, pos)
 

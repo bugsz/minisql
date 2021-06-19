@@ -118,7 +118,7 @@ class CatalogManager:
         header = CM_IO.headerMap.get(MetaType.attr)
         if header == None:
             header = CM_IO.get_header_from_file(MetaType.attr)
-        record_len = 0
+        record_len = 1
         data = b''
         for i in range(attr_num):
             type = 0

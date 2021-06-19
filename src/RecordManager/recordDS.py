@@ -145,19 +145,20 @@ class RM_IO:
         cnt = 0
         for i in range(header.page_capacity):
             record = cls.decode_page(table_id, header.first_free_page, i)
-            if not record.valid:
+            if record == None:
                 cnt += 1
-                pos = i
+                if pos == None:
+                    pos = i
         if cnt > 1:
             return (header.first_free_page, pos)
         page = cls.pageMap.get((table_id, header.first_free_page))
         if page == None:
             page = cls.get_page_from_file(table_id, header.first_free_page)
         ret = header.first_free_page
-        header.first_free_page = page.next_free_page
         page.next_free_page = -1
-        cls.pageMap[(table_id, page_id)] = page
-        cls.__write_page(table_id, header.size, page)
+        cls.pageMap[(table_id, ret)] = page
+        cls.__write_page(table_id, ret, page)
+        header.first_free_page = page.next_free_page
         cls.update_header(table_id, header)
         return (ret, pos)
 
@@ -172,7 +173,7 @@ class RM_IO:
             page = cls.get_page_from_file(table_id, header.size)
             page.next_free_page = header.first_free_page
             header.first_free_page = header.size
-            cls.pageMap[(table_id, page_id)] = page
+            cls.pageMap[(table_id, header.size)] = page
             cls.__write_page(table_id, header.size, page)
         cls.update_header(table_id, header)
         return header.size
