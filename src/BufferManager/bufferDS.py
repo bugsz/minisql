@@ -31,7 +31,7 @@ class PageData:
         self.next_free_page = next_free_page
         self.data = data
 
-
+'''
 class LinkedListNode:
     def __init__(self, block_data) -> None:
         """
@@ -89,4 +89,4 @@ class LRUReplacer:
             return True
         self.__rear.previous.next = None
         self.__rear = self.__rear.previous
-        
+'''

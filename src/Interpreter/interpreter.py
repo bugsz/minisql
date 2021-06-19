@@ -267,8 +267,9 @@ def p_expression_delete(p):
     return_value.action_type = ACTIONTYPE.DELETE
     return_value.table_name = p[3]
 
-    delete_result = API.api_delete(return_value)
-    print("{} row(s) affected")
+    if check_delete(return_value):
+        delete_num = API.api_delete(return_value)
+        print("{} row(s) affected".format(delete_num))
 
 def p_expression_insert(p):
     '''exp_insert : INSERT INTO COLUMN_OR_TABLE exp_insert_line'''
@@ -327,6 +328,13 @@ def p_error(p):
         print("Syntax error!")
     parser.restart()
 
+def check_delete(return_value):
+    if not CatalogManager.table_exist(return_value.table_name):
+        print("Table does not exist!")
+        return False
+
+    return True
+
 def check_create_table(return_value):
 
     if CatalogManager.attr_exist(return_value.table_name):
@@ -355,6 +363,11 @@ def check_create_table(return_value):
             if val_type[1] > 255 or val_type[1] < 0:
                 print("Invalid char definition!")
                 return False
+
+    if len(return_value.pk) != 1:
+        print("We only support primary key that only contains one attribute!")
+        return False
+    
     
     for (i, col) in enumerate(return_value.column_data):
         if col in return_value.pk and return_value.unique[i] != True:
@@ -401,12 +414,52 @@ def check_insert(return_value):
         return False
     
     for i in range(len(attrs)):
-        (attr_name, attr_type) = attrs[i]
-        attr_data = return_value.column_data[i]
+        (attr_name, attr_type, attr_length) = attrs[i]
 
-        if "'" in attr_data:
-            type = VALUETYPE.CHAR
-            # if len(attr_data) - 2
+        insert_data = return_value.column_data[i]
+
+        if "'" in insert_data:
+            if attr_type != VALUETYPE.CHAR:
+                print("Value type CHAR does not match on column {}".format(attr_name))
+                return False
+            if len(insert_data) > attr_length:
+                print("Value {} of type char has more characters than specified!".format(insert_data))
+                return False
+
+        if str.isnumeric(insert_data):
+            # int or float
+            if attr_type == VALUETYPE.INT:
+                return_value.column_data[i] = int(insert_data)
+                continue
+            if attr_type == VALUETYPE.FLOAT:
+                return_value.column_data[i] = float(bytes)
+                continue
+            if attr_type == VALUETYPE.CHAR:
+                print("Please use '' to specify a string")
+                return False
+
+        if "." in insert_data:
+            try:
+                float_number = float(insert_data)
+                
+                if attr_type == VALUETYPE.FLOAT:
+                    return_value.column_data[i] = float_number
+                    continue
+                
+                if attr_type == VALUETYPE.INT:
+                    print("Cannot inseert float number to int attribute!")
+                    return False
+
+                if attr_type == VALUETYPE.CHAR:
+                    print("Please use '' to specify a string")
+                    return False
+        
+
+            except ValueError:
+                print("Please use '' to specify a string")
+                return False
+
+    return True        
 
         
 
