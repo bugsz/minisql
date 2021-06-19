@@ -1,6 +1,9 @@
+from re import A
+from CatalogManager.CatalogManager import CatalogManager
 import os
 from utils.utils import ACTIONTYPE, CONDITION, VALUETYPE
 from Interpreter.interpreterDS import ReturnValue
+from RecordManager import RecordManager
 from ply import yacc, lex
 from API import API 
 from prettytable import PrettyTable
@@ -142,17 +145,21 @@ def p_expression_create(p):
     if p[2] in ['table', "TABLE"]:
         return_value.action_type = ACTIONTYPE.CREATE_TABLE
         return_value.table_name = p[3]
+        
         if check_create_table(return_value):
             API.api_create_table(return_value)
+            print("Successfully create table {}".format(return_value.table_name))
 
     elif p[2] in ['index', 'index']:
         return_value.action_type = ACTIONTYPE.CREATE_INDEX
         return_value.index_name = p[3]
         return_value.table_name = p[5]
         return_value.attr_name = p[7]
+
         if check_create_index(return_value):
-            pass
-            # TODO API.api_create_index
+            API.api_create_index(return_value)
+            print("Successfully create index {} on attribute {}".format(return_value.index_name, return_value.attr_name))
+
     else:
         print("Invalid command {}".format(p[2])) 
     
@@ -182,13 +189,13 @@ def p_expression_create_valid_char(p):
     '''exp_create_valid_char : COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN UNIQUE
                                | COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN'''
     if not str.isnumeric(p[4]):
-        print("[Error] String length should be a number")
+        print("[Error] String length should be a number!")
         raise SyntaxError
     return_value.value_type.append((VALUETYPE.CHAR, int(p[4])))
     return_value.column_data.append(p[1])
     return_value.unique.append(len(p) == 7)
 
-    print("char variable {}".format(p[1]))
+    # print("char variable {}".format(p[1]))
 
 def p_expression_create_valid_int(p):
     '''exp_create_valid_int : COLUMN_OR_TABLE INT
@@ -198,8 +205,7 @@ def p_expression_create_valid_int(p):
     return_value.column_data.append(p[1])
     return_value.unique.append(len(p) == 4)
 
-    print("int variable {}".format(p[1]))
-    pass
+    # print("int variable {}".format(p[1]))
 
 def p_expression_create_valid_float(p):
     '''exp_create_valid_float : COLUMN_OR_TABLE FLOAT
@@ -209,7 +215,7 @@ def p_expression_create_valid_float(p):
     return_value.column_data.append(p[1])
     return_value.unique.append(len(p) == 4)
 
-    print("float variable {}".format(p[1]))
+    # print("float variable {}".format(p[1]))
 
 
 def p_expression_drop(p):
@@ -220,13 +226,18 @@ def p_expression_drop(p):
     if p[2] in ['table', "TABLE"]:
         return_value.action_type = ACTIONTYPE.DROP_TABLE
         return_value.table_name = p[3]
-        API.api_drop_table(return_value.table_name)
-        pass
+
+        if check_drop_table(return_value):
+            API.api_drop_table(return_value.table_name)
+            print("Successfully drop table {}".format(p[3]))
+        
     elif p[2] in ['index', "INDEX"]:
         return_value.action_type = ACTIONTYPE.DROP_INDEX
         return_value.index_name = p[3]
-        API.api_drop_index(return_value.index_name)
-        pass
+
+        if check_drop_index(return_value):
+            API.api_drop_index(return_value.index_name)
+
     else:
         print("invalid command {}".format(p[2]))
         return 
@@ -239,7 +250,15 @@ def p_expression_select(p):
     return_value.table_name = p[4]
 
     select_result = API.api_select(return_value)
-    # TODO select api
+    if select_result is None:
+        print("No column selected")
+    
+    tb = PrettyTable()
+    tb.add_row()
+
+    print(tb)
+
+    # TODO
 
 def p_expression_delete(p):
     '''exp_delete : DELETE FROM COLUMN_OR_TABLE END
@@ -249,8 +268,7 @@ def p_expression_delete(p):
     return_value.table_name = p[3]
 
     delete_result = API.api_delete(return_value)
-    # TODO delete api
-    pass
+    print("{} row(s) affected")
 
 def p_expression_insert(p):
     '''exp_insert : INSERT INTO COLUMN_OR_TABLE exp_insert_line'''
@@ -258,9 +276,10 @@ def p_expression_insert(p):
     global column_data
 
     return_value.return_type = ACTIONTYPE.INSERT
-    
-    API.api_insert(return_value)
-    # TODO insert API
+
+    if check_insert(return_value):
+        API.api_insert(return_value)
+        print("Successfully insert values into table")
 
 
 def p_expression_insert_line(p):
@@ -309,24 +328,28 @@ def p_error(p):
     parser.restart()
 
 def check_create_table(return_value):
-    
-    print(return_value.pk)
+
+    if CatalogManager.attr_exist(return_value.table_name):
+        print("Table does not exist!")
+        return False
+
+    # print(return_value.pk)
     if len(return_value.pk) == 0:
         print("No primary key is specified!")
         return False
 
-    print(return_value.column_data)
+    # print(return_value.column_data)
     for pk in return_value.pk:
         if pk not in return_value.column_data:
             print("Primary key is not in the table!")
             return False
     
-    print(return_value.column_data)
+    # print(return_value.column_data)
     if len(set(return_value.column_data)) != len(return_value.column_data):
         print("Detect duplicate keys!")
         return False
 
-    print(return_value.value_type)
+    # print(return_value.value_type)
     for val_type in return_value.value_type:
         if val_type[0] == VALUETYPE.CHAR:
             if val_type[1] > 255 or val_type[1] < 0:
@@ -342,7 +365,50 @@ def check_create_table(return_value):
 
 
 def check_create_index(return_value):
-    pass
+    if not CatalogManager.attr_exist(return_value.table_name, return_value.attr_name):
+        print("Attribute name {} does not exist!")
+        return False
+        
+    if CatalogManager.index_exist(return_value.index_name):
+        print("Index name {} has already existed!".format(return_value.index_name))
+        return False
+
+    if CatalogManager.attr_unique(return_value.table_name, return_value.attr_name):
+        print("Attribute should be unique!")
+        return False
+
+    return True
+
+def check_drop_table(return_value):
+    if not CatalogManager.table_exist(return_value.table_name):
+        print("Table does not exist!")
+        return False
+
+    return True
+
+def check_drop_index(return_value):
+    if not CatalogManager.index_exist(return_value.index_name):
+        print("Index does not exist!")
+        return False
+
+    return True
+
+def check_insert(return_value):
+    attrs = CatalogManager.get_attrs_type(return_value.table_name)
+
+    if len(attrs) != len(return_value.column_data):
+        print("Inserted element number {} does not match attribute number of the table {}".format(len(return_value.column_data), len(attrs)))
+        return False
+    
+    for i in range(len(attrs)):
+        (attr_name, attr_type) = attrs[i]
+        attr_data = return_value.column_data[i]
+
+        if "'" in attr_data:
+            type = VALUETYPE.CHAR
+            # if len(attr_data) - 2
+
+        
 
 parser = yacc.yacc()
 
