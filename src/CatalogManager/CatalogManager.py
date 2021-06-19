@@ -84,18 +84,20 @@ class CatalogManager:
     def get_attrs_type(cls, table_name):
         """
         插入时做类型检查用
-        返回(attr_name, attr_type)的列表
+        返回(attr_name, attr_type, attr_length)的列表
         """
         table = CM_IO.decode_page(MetaType.table, cls.table_dict[table_name] // 30 + 1, cls.table_dict[table_name] % 30)
         ret = []
         for i in range(table.attr_num):
             record = CM_IO.decode_page(MetaType.attr, table.attr_page_id, i)
             type = utils.VALUETYPE.INT
+            length = 4
             if record.attr_type > 1:
                 type = utils.VALUETYPE.CHAR
+                length = record.attr_type - 1
             elif record.attr_type == 1:
                 type = utils.VALUETYPE.FLOAT
-            ret.append((record.attr_name, type))
+            ret.append((record.attr_name, type, length))
         return ret
 
     @classmethod
