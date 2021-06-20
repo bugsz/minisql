@@ -85,6 +85,26 @@ class RecordManager:
                             ret.append(record.value)
                 page_id += 1
         return ret
+                    
+    @classmethod
+    def select_all_attrs(cls, table_id, attr_id):
+        """
+        返回(position, value)的list
+        """
+        header = RM_IO.headerMap.get(table_id)
+        if header == None:
+            header = RM_IO.get_header_from_file(table_id)
+        ret = []
+        cnt = 0
+        page_id = 1
+        while cnt < header.record_num:
+            for i in range(header.page_capacity):
+                record = RM_IO.decode_page(table_id, page_id, i)
+                if record != None:
+                    cnt += 1
+                    ret.append(((i, page_id), record.value[attr_id]))
+            page_id += 1
+        return ret
 
     @classmethod
     def attr_value_exist(cls, table_id, attr_id, value) -> bool:
