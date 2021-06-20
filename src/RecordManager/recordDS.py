@@ -106,9 +106,9 @@ class RM_IO:
                     value.append(utils.byte_to_float(page.data[pos:pos+4]))
                     pos += 4
                 else:
-                    str = utils.byte_to_str(page.data[pos:pos+type-1])
-                    str = str.rstrip('\x00')
-                    value.append(str)
+                    str0 = utils.byte_to_str(page.data[pos:pos+type-1])
+                    str0 = str0.rstrip('\x00')
+                    value.append(str0)
                     pos += type - 1
             return Record(valid, value)
     

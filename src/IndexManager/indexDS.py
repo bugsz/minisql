@@ -86,9 +86,9 @@ class BM_IO:
                 key.append(utils.byte_to_float(pageData.data[st:st + 4]))
                 st += 4
             else:
-                str = utils.byte_to_str(pageData.data[st: st + header.attr_type - 1])
-                str = str.rstrip('\x00')
-                key.append(str)
+                str0 = utils.byte_to_str(pageData.data[st: st + header.attr_type - 1])
+                str0 = str0.rstrip('\x00')
+                key.append(str0)
                 st += header.attr_type - 1
         cls.pageMap[(index_id, page_id)] = IndexPage(pageData.next_free_page, isRoot, isLeaf, nxt, size, pointer, key)
         return cls.pageMap[(index_id, page_id)]
