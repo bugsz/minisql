@@ -1,11 +1,10 @@
-from re import A
 from CatalogManager.CatalogManager import CatalogManager
 import os
 from utils.utils import ACTIONTYPE, CONDITION, VALUETYPE
 from Interpreter.interpreterDS import ReturnValue
 from RecordManager import RecordManager
 from ply import yacc, lex
-from API import API 
+from API.API import API 
 from prettytable import PrettyTable
 
 
@@ -249,16 +248,17 @@ def p_expression_select(p):
     return_value.action_type = ACTIONTYPE.SELECT_STAR
     return_value.table_name = p[4]
 
-    select_result = API.api_select(return_value)
-    if select_result is None:
-        print("No column selected")
+    if check_select(return_value):
+        select_result = API.api_select(return_value)
+
+        if select_result is None:
+            print("No column selected")
     
-    tb = PrettyTable()
-    tb.add_row()
+        tb = PrettyTable()
+        tb.add_row()
 
-    print(tb)
+        print(tb)
 
-    # TODO
 
 def p_expression_delete(p):
     '''exp_delete : DELETE FROM COLUMN_OR_TABLE END
@@ -309,8 +309,8 @@ def p_expression_all_conditions(p):
 
 def p_expression_quit(p):
     '''exp_quit : QUIT'''
+    API.api_quit()
     print("Bye")
-    # TODO 处理quit的事项
     exit(0)
 
 def p_expression_execfile(p):
@@ -329,10 +329,26 @@ def p_error(p):
     parser.restart()
 
 def check_delete(return_value):
-    if not CatalogManager.table_exist(return_value.table_name):
+
+    table_name = return_value.table_name
+    if not CatalogManager.table_exist(table_name):
         print("Table does not exist!")
         return False
+    
+    for condition in return_value.condition:
+        if not CatalogManager.attr_exist(table_name, condition.lvalue):
+            print("Attribute {} does not exist!".format(condition.lvalue))
+            return False
 
+    return True
+
+def check_select(return_value):
+    table_name = return_value.table_name
+    for condition in return_value.condition:
+        if not CatalogManager.attr_exist(table_name, condition.lvalue):
+            print("Attribute {} does not exist!".format(condition.lvalue))
+            return False
+    
     return True
 
 def check_create_table(return_value):

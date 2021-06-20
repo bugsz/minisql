@@ -135,7 +135,7 @@ class BufferManager:
             return block_from_buffer.page
         elif len(cls.buffer_blocks) < MAX_BUFFER_BLOCKS:
             # 如果该页不在buffer内且buffer非满
-            print(file_name, page_id)
+            # print(file_name, page_id)
             page_data = cls._fetch_page_from_file(file_name, page_id)
             block = BufferBlock(page_data, file_name, page_id)
             cls.buffer_blocks.append(block)
@@ -180,7 +180,7 @@ class BufferManager:
             b'\x00' * 8188) if block.page.data is None else block.page.data
         page_data = utils.int_to_byte(block.page.next_free_page) + page_data
 
-        with open(file_name, "rb+") as f:
+        with open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+") as f:
             f.seek(page_offset, 0)
             f.write(page_data)
             block.dirty = False
@@ -191,7 +191,7 @@ class BufferManager:
             内部方法
             :return : PageHeader
         """
-        with open(file_name, "rb+") as f:
+        with open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+") as f:
             if f is None:
                 return None
             header_data = f.read(PAGE_SIZE)
@@ -295,14 +295,10 @@ class BufferManager:
             print("File {} exists!".format(file_name))
             return -1
         
-        with open(file_name, "w") as f:
+        with open(os.path.join(utils.DB_FILE_FOLDER, file_name), "w") as f:
             pass
 
         file_header = PageHeader(0, 0, bytearray(b'\x00'*8184))
         cls.set_header(file_name, file_header)
         
         return 0
-    
-
-if __name__ == "__main__":
-    pass
