@@ -80,21 +80,13 @@ def float_to_byte(float):
     return pack("f", float)
 
 def byte_to_float(byte):
-    return unpack("f", byte)
+    return unpack("f", byte)[0]
 
 
 
 if __name__ == "__main__":
     import sys
-    a = "123"
+    a = "'2'"
     b = str_to_byte(a)
-    print(b, getsizeof(b))
-    d = str_to_byte("1234")
-    print(d, getsizeof(d))
     c = byte_to_str(b)
-    print(c, sys.getsizeof(c))
-
-    e = 1.414
-    f = float_to_byte(e)
-    g = byte_to_float(f)
-    print(e, f, g)
+    print(a, b, c)
