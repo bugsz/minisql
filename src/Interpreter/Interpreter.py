@@ -198,7 +198,7 @@ def p_expression_create_valid_int(p):
     '''exp_create_valid_int : COLUMN_OR_TABLE INT
                             | COLUMN_OR_TABLE INT UNIQUE'''
     global return_value
-    return_value.value_type.append((VALUETYPE.FLOAT, 0))
+    return_value.value_type.append((VALUETYPE.INT, 0))
     return_value.column_data.append(p[1])
     return_value.unique.append(len(p) == 4)
 
