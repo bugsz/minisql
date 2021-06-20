@@ -450,18 +450,22 @@ def check_insert(return_value):
             if len(insert_data) > attr_length:
                 print("Value {} of type char has more characters than specified!".format(insert_data))
                 return False
+            continue
 
         if str.isnumeric(insert_data):
             # int or float
             if attr_type == VALUETYPE.INT:
                 return_value.column_data[i] = int(insert_data)
+                print(type(return_value.column_data[i]))
                 continue
             if attr_type == VALUETYPE.FLOAT:
                 return_value.column_data[i] = float(insert_data)
+                # print(type(return_value.column_data[i]))
                 continue
             if attr_type == VALUETYPE.CHAR:
                 print("Please use '' to specify a string")
                 return False
+            continue
 
         if "." in insert_data:
             try:
@@ -478,6 +482,7 @@ def check_insert(return_value):
                 if attr_type == VALUETYPE.CHAR:
                     print("Please use '' to specify a string")
                     return False
+                continue
         
 
             except ValueError:

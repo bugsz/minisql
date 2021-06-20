@@ -101,7 +101,7 @@ class API:
         table_id = CatalogManager.get_table_id(select_value.table_name)
 
         for condition in select_value.condition:
-            condition.lvalue = CatalogManager.get_attr_id(table_id, condition.lvalue)
+            condition.lvalue = CatalogManager.get_attr_id(table_id, condition.lvalue)[0]
   
 
         # 可以利用index进行加速
@@ -110,7 +110,7 @@ class API:
         return select_result
 
     @classmethod
-    def api_delete(delete_value) -> int:
+    def api_delete(cls, delete_value) -> int:
         '''
             函数中将attr转换成了id形式
             保证所有attr都存在
@@ -118,6 +118,7 @@ class API:
         '''
         # 在查找的时候，只需要找一个index就行了
         candidate_tuple = None
+        table_id = CatalogManager.get_table_id(delete_value.table_name)
         # 查找表中存在的index，
         # 形式为（index_id, attr_name)
         index_list = CatalogManager.find_indexes(delete_value.table_name)
@@ -131,7 +132,7 @@ class API:
                     break
         
         for condition in delete_value.condition:
-            condition.lvalue = CatalogManager.get_attr_id(condition.lvalue)
+            condition.lvalue = CatalogManager.get_attr_id(table_id, condition.lvalue)[0]
 
         table_id = CatalogManager.get_table_id(delete_value.table_name)
         delete_num = RecordManager.delete(table_id, condition = delete_value.condition, candidates= candidate_tuple)
