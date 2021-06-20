@@ -1,0 +1,10 @@
+create table t1(
+    sno int unique,
+    sname char(16) unique,
+    sage int,
+    sgender char(4),
+    primary key (sno)
+);
+select * from t1 where sno <> 1;
+insert into t1 values(1, '1', 1, '1');
+select * from t1;

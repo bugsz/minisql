@@ -1,1 +1,3 @@
-from utils import utils
+from Interpreter.Interpreter import Interpret
+
+Interpret()

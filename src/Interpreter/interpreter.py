@@ -1,7 +1,7 @@
 from CatalogManager.CatalogManager import CatalogManager
 import os
 from utils.utils import ACTIONTYPE, CONDITION, VALUETYPE
-from Interpreter.interpreterDS import ReturnValue
+from Interpreter.InterpreterDS import ReturnValue
 from RecordManager import RecordManager
 from ply import yacc, lex
 from API.API import API 
@@ -123,9 +123,7 @@ execfile = 0
 execfile_name = ""
 
 def reset():
-    global condition, column_data, return_value
-    condition = []
-    column_data = []
+    global return_value
     return_value = ReturnValue()
 
 def p_expression_start(p):
@@ -251,12 +249,16 @@ def p_expression_select(p):
     if check_select(return_value):
         select_result = API.api_select(return_value)
 
-        if select_result is None:
+        if len(select_result) == 0:
             print("No column selected")
-    
-        tb = PrettyTable()
-        tb.add_row()
+            return 
 
+        attrs = CatalogManager.get_attrs_type(p[4])
+        attr_row = [attr[0] for attr in attrs]
+        tb = PrettyTable()
+        tb.field_names = attr_row
+        for tuple in select_result:
+            tb.add_row(tuple)
         print(tb)
 
 
@@ -277,6 +279,8 @@ def p_expression_insert(p):
     global column_data
 
     return_value.return_type = ACTIONTYPE.INSERT
+    return_value.table_name = p[3]
+    return_value.column_data.reverse()
 
     if check_insert(return_value):
         API.api_insert(return_value)
@@ -352,8 +356,8 @@ def check_select(return_value):
     return True
 
 def check_create_table(return_value):
-
-    if CatalogManager.attr_exist(return_value.table_name):
+    print(return_value.column_data)
+    if CatalogManager.attr_exist(return_value.table_name, return_value.attr_name):
         print("Table does not exist!")
         return False
 
@@ -423,10 +427,15 @@ def check_drop_index(return_value):
     return True
 
 def check_insert(return_value):
+
+    # print(return_value.table_name)
     attrs = CatalogManager.get_attrs_type(return_value.table_name)
+    # attrs = reversed(attrs)
+    print(return_value.column_data)
+    print(attrs)
 
     if len(attrs) != len(return_value.column_data):
-        print("Inserted element number {} does not match attribute number of the table {}".format(len(return_value.column_data), len(attrs)))
+        print("Inserted element number {} does not match attribute number of table {}".format(len(return_value.column_data), len(attrs)))
         return False
     
     for i in range(len(attrs)):
@@ -448,7 +457,7 @@ def check_insert(return_value):
                 return_value.column_data[i] = int(insert_data)
                 continue
             if attr_type == VALUETYPE.FLOAT:
-                return_value.column_data[i] = float(bytes)
+                return_value.column_data[i] = float(insert_data)
                 continue
             if attr_type == VALUETYPE.CHAR:
                 print("Please use '' to specify a string")
@@ -481,9 +490,10 @@ def check_insert(return_value):
 
 parser = yacc.yacc()
 
-def interpret():
+def Interpret():
+    API.api_initialize()
+
     global execfile, execfile_name
-    
     while True:
         if execfile == 0:
             data = input("minisql>")
@@ -504,6 +514,7 @@ def interpret():
                     data = ""
                     new_line = f.readline()
                     if not new_line:
+                        print("Detect empty line, quit...")
                         return 0
                     
                     reset()
@@ -512,9 +523,11 @@ def interpret():
                             print("No end token found!")
                             return -1
                         data += new_line
+                        if ";" in new_line:
+                            break
                         new_line = f.readline()
 
                     print(data)
                     res = parser.parse(data)                    
 
-interpret()              
+# interpret()              

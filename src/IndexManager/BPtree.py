@@ -107,10 +107,11 @@ class BPTree:
         return ret        
 
     @classmethod
-    def find(cls, rootNode, value) -> [BPTreeNode, int]:
+    def find(cls, rootNode, value):
         """
             在子树中查找值最接近value(>=)的record
             返回leafNode以及该记录位置
+            :return : (BPTreeNode, int)
         """
         if value != None:
             p = binary_find(rootNode.key, value)
@@ -125,7 +126,10 @@ class BPTree:
         return cls.find(rootNode.child[p], value)
 
     @classmethod
-    def __split(cls, rootNode) -> [BPTreeNode, BPTreeNode]:
+    def __split(cls, rootNode):
+        """
+            :return (BPTreeNode, BPTreeNode)
+        """
         mid = rootNode.size // 2
         retNode = copy.deepcopy(rootNode)                   # retNode is the right one while rootNode stays left
         retNode.page_id = IO.get_new_page_id(rootNode.index_id)

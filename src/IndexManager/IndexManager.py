@@ -1,5 +1,5 @@
 from IndexManager.indexDS import BM_IO as IO
-from IndexManager.BPTree import BPTree
+from IndexManager.BPtree import BPTree
 from utils import utils
 
 class IndexManager:

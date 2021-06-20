@@ -1,5 +1,5 @@
 import os
-from BufferManager.bufferDS import PageData, PageHeader, LRUReplacer
+from BufferManager.bufferDS import PageData, PageHeader
 from BufferManager.bufferDS import BufferBlock
 from utils import utils
 from collections import deque
@@ -158,7 +158,7 @@ class BufferManager:
         """
         page_offset = page_id * PAGE_SIZE
 
-        with open(file_name, "rb+") as f:
+        with open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+") as f:
             f.seek(page_offset)
             page_data = f.read(PAGE_SIZE)
             next_free_page = utils.byte_to_int(page_data[0:4])
@@ -256,7 +256,7 @@ class BufferManager:
 
         data = bytearray(b"\xff\xff\xff\xff" + b"\x00" * 8188)
         # page_data = PageData(0, data)
-        with open(file_name, 'rb+') as f:
+        with open(os.path.join(utils.DB_FILE_FOLDER, file_name), 'rb+') as f:
             f.seek(PAGE_SIZE*page_id, 0)
             f.write(data)
         
@@ -272,7 +272,7 @@ class BufferManager:
              + utils.int_to_byte(header.size) \
              + header.data
 
-        with open(file_name, "rb+") as f:
+        with open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+") as f:
             f.seek(0, 0)
             f.write(data)
 
