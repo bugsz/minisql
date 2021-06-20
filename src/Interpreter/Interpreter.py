@@ -258,6 +258,7 @@ def p_expression_select(p):
         tb = PrettyTable()
         tb.field_names = attr_row
         for tuple in select_result:
+            print(tuple)
             tb.add_row(tuple)
         print(tb)
 

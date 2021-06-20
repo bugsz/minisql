@@ -6,6 +6,9 @@ create table t1(
     primary key (sno)
 );
 select * from t1 where sno <> 1;
+create index i1 on t1(sno);
+
+
 insert into t1 values(1, '1', 1, '1');
 insert into t1 values(2, '2', 2, '2');
 insert into t1 values(3, '2', 2, '2');

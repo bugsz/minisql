@@ -89,4 +89,14 @@ if __name__ == "__main__":
     a = "'2'"
     b = str_to_byte(a)
     c = byte_to_str(b)
-    print(a, b, c)
+    print(a)
+    print(b)
+    print(c)
+
+    d = 1.0
+    e = float_to_byte(d)
+    f = byte_to_float(e)
+
+    print(d)
+    print(e)
+    print(f)
