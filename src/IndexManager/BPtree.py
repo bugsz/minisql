@@ -112,7 +112,10 @@ class BPTree:
             在子树中查找值最接近value(>=)的record
             返回leafNode以及该记录位置
         """
-        p = binary_find(rootNode.key, value)
+        if value != None:
+            p = binary_find(rootNode.key, value)
+        else:
+            p = 0
         if p == len(rootNode.key):
             return [None, -1]
         if rootNode.is_leaf:

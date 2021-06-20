@@ -30,6 +30,24 @@ class IndexManager:
         return BPTree.delete(header.order, root, value)
 
     @classmethod
+    def find_by_condition(cls, index_id, condition):
+        """
+        基于单一condition查询record
+        返回list,组成元素为位置元组
+        """
+        if condition.comparator == utils.COMPARATOR.EQUAL:
+            ret = cls.find_single(index_id, condition.rvalue)
+            return [] if ret == None else [ret]
+        elif condition.comparator == utils.COMPARATOR.GREATER:
+            return cls.__find_range(index_id, condition.rvalue, None, False, False)
+        elif condition.comparator == utils.COMPARATOR.GREATER_EQUAL:
+            return cls.__find_range(index_id, condition.rvalue, None, True, False)
+        elif condition.comparator == utils.COMPARATOR.LESS:
+            return cls.__find_range(index_id, None, condition.rvalue, False, False)
+        elif condition.comparator == utils.COMPARATOR.LESS_EQUAL:
+            return cls.__find_range(index_id, None, condition.rvalue, False, True)
+
+    @classmethod
     def find_single(cls, index_id, value):
         """
             查询值等于value的record
@@ -46,7 +64,7 @@ class IndexManager:
             return None
 
     @classmethod
-    def find_range(cls, index_id, lower, upper):
+    def __find_range(cls, index_id, lower, upper, includeL, includeR):
         """
             查询值处于区间[lower,upper]的record
             返回list,组成元素为位置元组
@@ -56,11 +74,16 @@ class IndexManager:
             header = IO.get_header_from_file(index_id)
         root = IO.get_node(index_id, header.root)
         leafNode, k = BPTree.find(root, lower)
+        if not includeL and lower == leafNode.key[k]:
+            k += 1
+            if k == leafNode.size:
+                leafNode = IO.get_node(index_id, leafNode.next)
+                k = 0
         ret = []
         if leafNode == None:
             return ret
         while leafNode != None:
-            while k < leafNode.size and leafNode.key[k] <= upper:
+            while k < leafNode.size and (upper == None or includeR and leafNode.key[k] <= upper or not includeR and leafNode.key[k] < upper):
                 ret.append(leafNode.pointer[k])
                 k += 1
             if k == leafNode.size:

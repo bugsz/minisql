@@ -86,6 +86,23 @@ class RecordManager:
         return ret
 
     @classmethod
+    def attr_value_exist(cls, table_id, attr_id, value) -> bool:
+        header = RM_IO.headerMap.get(table_id)
+        if header == None:
+            header = RM_IO.get_header_from_file(table_id)
+        cnt = 0
+        page_id = 1
+        while cnt < header.record_num:
+            for i in range(header.page_capacity):
+                record = RM_IO.decode_page(table_id, page_id, i)
+                if record != None:
+                    cnt += 1
+                    if record.value[attr_id] == value:
+                        return True
+            page_id += 1
+        return False
+
+    @classmethod
     def __delete_item(cls, table_id, page_id, record_id, record):
         record.valid = False
         RM_IO.update_page(table_id, page_id, record_id, record)
