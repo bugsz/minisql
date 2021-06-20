@@ -30,17 +30,18 @@ class RecordManager:
         若条件中存在可被索引加速项，则将索引查询返回的record位置作为candidate传入
         此时这些条件不再出现在condition中
         下同
+        返回值与select相同，用于维护index
         """
         header = RM_IO.headerMap.get(table_id)
         if header == None:
             header = RM_IO.get_header_from_file(table_id)
-        delete_num = 0
+        deleted = []
         if candidates != None:
             for i in candidates:
                 record = RM_IO.decode_page(table_id, i[1], i[0])
                 if condition == None or cls.__match(record, condition):
                     cls.__delete_item(table_id, i[1], i[0], record)
-                    delete_num += 1
+                    deleted.append(record.value)
         else:
             cnt = 0
             page_id = 1
@@ -51,11 +52,11 @@ class RecordManager:
                         cnt += 1
                         if condition == None or cls.__match(record, condition):
                             cls.__delete_item(table_id, page_id, i, record)
-                            delete_num += 1
+                            deleted.append(record.value)
                 page_id += 1
-        header.record_num -= delete_num
+        header.record_num -= len(deleted)
         RM_IO.update_header(table_id, header)
-        return delete_num
+        return deleted
                     
     @classmethod
     def select(cls, table_id, condition = None, candidates = None):
