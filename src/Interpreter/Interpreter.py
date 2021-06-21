@@ -399,6 +399,8 @@ def check_create_table(return_value):
 
 
 def check_create_index(return_value):
+    print(return_value.attr_name)
+    
     if not CatalogManager.attr_exist(return_value.table_name, return_value.attr_name):
         print("Attribute name {} does not exist!")
         return False
@@ -407,7 +409,7 @@ def check_create_index(return_value):
         print("Index name {} has already existed!".format(return_value.index_name))
         return False
 
-    if CatalogManager.attr_unique(return_value.table_name, return_value.attr_name):
+    if not CatalogManager.attr_unique(return_value.table_name, return_value.attr_name):
         print("Attribute should be unique!")
         return False
 

@@ -40,22 +40,27 @@ class API:
             如失败，告诉原因
         '''
 
+        
+        
+
         table_name = create_value.table_name
         index_name = create_value.index_name
         attr_name = create_value.attr_name
-        index_id = CatalogManager.get_index_id(index_name)
         table_id = CatalogManager.get_table_id(table_name)
         attr_id = CatalogManager.get_attr_id(table_id, attr_name)
+
+        # 创建索引文件
+        CatalogManager.create_index(index_name, table_name, attr_name)
+        index_id = CatalogManager.get_index_id(index_name)
 
         # 查询所有元组
         selected = RecordManager.select_all_attrs(table_id, attr_id)
 
-        # 创建索引文件
-        CatalogManager.create_index(index_name, table_name, attr_name)
+        
         
         attrs = CatalogManager.get_attrs_type(table_name)
         attr_id = 0
-        for i in len(attrs):
+        for i in range(len(attrs)):
             if attrs[i][0] == attr_name:
                 attr_id = i
                 break
