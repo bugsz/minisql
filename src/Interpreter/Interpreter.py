@@ -501,6 +501,7 @@ def check_insert(return_value):
         print("Inserted element number {} does not match attribute number of table {}".format(len(return_value.column_data), len(attrs)))
         return False
     
+    # 检测数据类型是否匹配
     for i in range(len(attrs)):
         (attr_name, attr_type, attr_length) = attrs[i]
 
@@ -553,6 +554,20 @@ def check_insert(return_value):
                 print("Please use '' to specify a string")
                 return False
 
+    data_tuple = API.api_select(return_value)
+    # 检测是否unique
+    table_name = return_value.table_name
+    for i in range(len(attrs)):
+        (attr_name, attr_type, attr_length) = attrs[i]
+        unique = CatalogManager.attr_unique(table_name, attr_name)
+        if not unique:
+            continue
+        attr_value_list = [data_tuple[j][i] for j in range(len(data_tuple))]
+        insert_data = return_value.column_data[i]
+        if insert_data in attr_value_list:
+            print("Inserted data on attribute {} should be unique!".format(attr_name))
+            return False
+    
     return True        
 
         
