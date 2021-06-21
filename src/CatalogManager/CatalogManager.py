@@ -124,11 +124,12 @@ class CatalogManager:
         data = b''
         for i in range(attr_num):
             type = 0
+            record_len += 4
             if attrs[i][1] == utils.VALUETYPE.FLOAT:
                 type = 1
             elif attrs[i][1] == utils.VALUETYPE.CHAR:
                 type = attrs[i][2] + 1
-            record_len += attrs[i][2]
+                record_len += attrs[i][2] - 4
             data += utils.int_to_byte(type)
             attr = MetaAttr(attrs[i][0], type, -1, attrs[i][3])
             CM_IO.update_page(MetaType.attr, record.attr_page_id, i, attr)

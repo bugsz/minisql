@@ -67,6 +67,7 @@ class RecordManager:
         header = RM_IO.headerMap.get(table_id)
         if header == None:
             header = RM_IO.get_header_from_file(table_id)
+        print("RM INFO:{}".format(header.attr_types))
         ret = []
         if candidates != None:
             for i in candidates:
