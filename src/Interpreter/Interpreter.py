@@ -557,29 +557,34 @@ def check_insert(return_value):
                 print("Please use '' to specify a string")
                 return False
 
+        if not check_unique(return_value, attrs):
+            return False
+    
+    return True        
+
+def check_unique(return_value, attrs):
     # 利用索引进行优化查询
     table_name = return_value.table_name
-    unique_value = ReturnValue()
-    unique_value.table_name = table_name
+    
+    # print_dbg_info(unique_value)   
+    # 检测是否unique
     for i in range(len(attrs)):
+        unique_value = ReturnValue()
+        unique_value.table_name = table_name
+        attr_name = attrs[i][0]
         # (attr_name, attr_type, attr_length)
-        if not CatalogManager.attr_unique(table_name, attrs[i][0]):
+        if not CatalogManager.attr_unique(table_name, attr_name):
             continue
         condition_rvalue = return_value.column_data[i]
         condition_comparator = "="
-        condition_lvalue = attrs[i][0]
+        condition_lvalue = attr_name
         unique_value.condition.append(CONDITION(condition_lvalue, condition_comparator, condition_rvalue))
-    # print_dbg_info(unique_value)   
-    # 检测是否unique
-    data_tuple = API.api_select(unique_value)
-    print(data_tuple)
-    if len(data_tuple) != 0:
-        print("Inserted data on attribute {} should be unique!".format(attr_name))
-        return False
-      
-    return True        
+        data_tuple = API.api_select(unique_value)
+        if len(data_tuple) != 0:
+            print("Inserted data on attribute {} should be unique!".format(attr_name))
+            return False
 
-        
+    return True
 
 parser = yacc.yacc()
 
