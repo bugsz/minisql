@@ -218,8 +218,8 @@ def p_expression_create_valid_float(p):
 
 
 def p_expression_drop(p):
-    '''exp_drop : DROP TABLE COLUMN_OR_TABLE 
-                | DROP INDEX COLUMN_OR_TABLE'''
+    '''exp_drop : DROP TABLE COLUMN_OR_TABLE END 
+                | DROP INDEX COLUMN_OR_TABLE END'''
 
     global return_value
     if p[2] in ['table', "TABLE"]:

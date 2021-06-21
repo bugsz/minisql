@@ -31,8 +31,8 @@ Rule 21    exp_create_valid_int -> COLUMN_OR_TABLE INT
 Rule 22    exp_create_valid_int -> COLUMN_OR_TABLE INT UNIQUE
 Rule 23    exp_create_valid_float -> COLUMN_OR_TABLE FLOAT
 Rule 24    exp_create_valid_float -> COLUMN_OR_TABLE FLOAT UNIQUE
-Rule 25    exp_drop -> DROP TABLE COLUMN_OR_TABLE
-Rule 26    exp_drop -> DROP INDEX COLUMN_OR_TABLE
+Rule 25    exp_drop -> DROP TABLE COLUMN_OR_TABLE END
+Rule 26    exp_drop -> DROP INDEX COLUMN_OR_TABLE END
 Rule 27    exp_select -> SELECT STAR FROM COLUMN_OR_TABLE END
 Rule 28    exp_select -> SELECT STAR FROM COLUMN_OR_TABLE exp_condition
 Rule 29    exp_delete -> DELETE FROM COLUMN_OR_TABLE END
@@ -57,7 +57,7 @@ COMPARATOR           : 36 37
 CREATE               : 8 9
 DELETE               : 29 30
 DROP                 : 25 26
-END                  : 8 9 27 29 32 35 39
+END                  : 8 9 25 26 27 29 32 35 39
 EXECFILE             : 39
 FLOAT                : 23 24
 FROM                 : 27 28 29 30
@@ -114,8 +114,8 @@ state 0
     (5) expression -> . exp_insert
     (6) expression -> . exp_quit
     (7) expression -> . exp_execfile
-    (25) exp_drop -> . DROP TABLE COLUMN_OR_TABLE
-    (26) exp_drop -> . DROP INDEX COLUMN_OR_TABLE
+    (25) exp_drop -> . DROP TABLE COLUMN_OR_TABLE END
+    (26) exp_drop -> . DROP INDEX COLUMN_OR_TABLE END
     (27) exp_select -> . SELECT STAR FROM COLUMN_OR_TABLE END
     (28) exp_select -> . SELECT STAR FROM COLUMN_OR_TABLE exp_condition
     (29) exp_delete -> . DELETE FROM COLUMN_OR_TABLE END
@@ -200,8 +200,8 @@ state 8
 
 state 9
 
-    (25) exp_drop -> DROP . TABLE COLUMN_OR_TABLE
-    (26) exp_drop -> DROP . INDEX COLUMN_OR_TABLE
+    (25) exp_drop -> DROP . TABLE COLUMN_OR_TABLE END
+    (26) exp_drop -> DROP . INDEX COLUMN_OR_TABLE END
 
     TABLE           shift and go to state 16
     INDEX           shift and go to state 17
@@ -255,14 +255,14 @@ state 15
 
 state 16
 
-    (25) exp_drop -> DROP TABLE . COLUMN_OR_TABLE
+    (25) exp_drop -> DROP TABLE . COLUMN_OR_TABLE END
 
     COLUMN_OR_TABLE shift and go to state 24
 
 
 state 17
 
-    (26) exp_drop -> DROP INDEX . COLUMN_OR_TABLE
+    (26) exp_drop -> DROP INDEX . COLUMN_OR_TABLE END
 
     COLUMN_OR_TABLE shift and go to state 25
 
@@ -313,16 +313,16 @@ state 23
 
 state 24
 
-    (25) exp_drop -> DROP TABLE COLUMN_OR_TABLE .
+    (25) exp_drop -> DROP TABLE COLUMN_OR_TABLE . END
 
-    $end            reduce using rule 25 (exp_drop -> DROP TABLE COLUMN_OR_TABLE .)
+    END             shift and go to state 32
 
 
 state 25
 
-    (26) exp_drop -> DROP INDEX COLUMN_OR_TABLE .
+    (26) exp_drop -> DROP INDEX COLUMN_OR_TABLE . END
 
-    $end            reduce using rule 26 (exp_drop -> DROP INDEX COLUMN_OR_TABLE .)
+    END             shift and go to state 33
 
 
 state 26
@@ -330,7 +330,7 @@ state 26
     (27) exp_select -> SELECT STAR FROM . COLUMN_OR_TABLE END
     (28) exp_select -> SELECT STAR FROM . COLUMN_OR_TABLE exp_condition
 
-    COLUMN_OR_TABLE shift and go to state 32
+    COLUMN_OR_TABLE shift and go to state 34
 
 
 state 27
@@ -339,23 +339,23 @@ state 27
     (30) exp_delete -> DELETE FROM COLUMN_OR_TABLE . exp_condition
     (35) exp_condition -> . WHERE exp_all_conditions END
 
-    END             shift and go to state 33
-    WHERE           shift and go to state 35
+    END             shift and go to state 35
+    WHERE           shift and go to state 37
 
-    exp_condition                  shift and go to state 34
+    exp_condition                  shift and go to state 36
 
 state 28
 
     (8) exp_create -> CREATE TABLE COLUMN_OR_TABLE . LPAREN exp_create_columns RPAREN END
 
-    LPAREN          shift and go to state 36
+    LPAREN          shift and go to state 38
 
 
 state 29
 
     (9) exp_create -> CREATE INDEX COLUMN_OR_TABLE . ON COLUMN_OR_TABLE LPAREN COLUMN_OR_TABLE RPAREN END
 
-    ON              shift and go to state 37
+    ON              shift and go to state 39
 
 
 state 30
@@ -363,9 +363,9 @@ state 30
     (31) exp_insert -> INSERT INTO COLUMN_OR_TABLE . exp_insert_line
     (32) exp_insert_line -> . VALUES LPAREN columns RPAREN END
 
-    VALUES          shift and go to state 39
+    VALUES          shift and go to state 41
 
-    exp_insert_line                shift and go to state 38
+    exp_insert_line                shift and go to state 40
 
 state 31
 
@@ -376,40 +376,54 @@ state 31
 
 state 32
 
+    (25) exp_drop -> DROP TABLE COLUMN_OR_TABLE END .
+
+    $end            reduce using rule 25 (exp_drop -> DROP TABLE COLUMN_OR_TABLE END .)
+
+
+state 33
+
+    (26) exp_drop -> DROP INDEX COLUMN_OR_TABLE END .
+
+    $end            reduce using rule 26 (exp_drop -> DROP INDEX COLUMN_OR_TABLE END .)
+
+
+state 34
+
     (27) exp_select -> SELECT STAR FROM COLUMN_OR_TABLE . END
     (28) exp_select -> SELECT STAR FROM COLUMN_OR_TABLE . exp_condition
     (35) exp_condition -> . WHERE exp_all_conditions END
 
-    END             shift and go to state 40
-    WHERE           shift and go to state 35
+    END             shift and go to state 42
+    WHERE           shift and go to state 37
 
-    exp_condition                  shift and go to state 41
+    exp_condition                  shift and go to state 43
 
-state 33
+state 35
 
     (29) exp_delete -> DELETE FROM COLUMN_OR_TABLE END .
 
     $end            reduce using rule 29 (exp_delete -> DELETE FROM COLUMN_OR_TABLE END .)
 
 
-state 34
+state 36
 
     (30) exp_delete -> DELETE FROM COLUMN_OR_TABLE exp_condition .
 
     $end            reduce using rule 30 (exp_delete -> DELETE FROM COLUMN_OR_TABLE exp_condition .)
 
 
-state 35
+state 37
 
     (35) exp_condition -> WHERE . exp_all_conditions END
     (36) exp_all_conditions -> . COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE
     (37) exp_all_conditions -> . COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE AND exp_all_conditions
 
-    COLUMN_OR_TABLE shift and go to state 43
+    COLUMN_OR_TABLE shift and go to state 45
 
-    exp_all_conditions             shift and go to state 42
+    exp_all_conditions             shift and go to state 44
 
-state 36
+state 38
 
     (8) exp_create -> CREATE TABLE COLUMN_OR_TABLE LPAREN . exp_create_columns RPAREN END
     (10) exp_create_columns -> . exp_create_valid_column
@@ -426,67 +440,67 @@ state 36
     (24) exp_create_valid_float -> . COLUMN_OR_TABLE FLOAT UNIQUE
     (16) exp_create_valid_pk -> . PRIMARY KEY LPAREN exp_pk RPAREN
 
-    COLUMN_OR_TABLE shift and go to state 44
-    PRIMARY         shift and go to state 51
+    COLUMN_OR_TABLE shift and go to state 46
+    PRIMARY         shift and go to state 53
 
-    exp_create_columns             shift and go to state 45
-    exp_create_valid_column        shift and go to state 46
-    exp_create_valid_char          shift and go to state 47
-    exp_create_valid_int           shift and go to state 48
-    exp_create_valid_float         shift and go to state 49
-    exp_create_valid_pk            shift and go to state 50
+    exp_create_columns             shift and go to state 47
+    exp_create_valid_column        shift and go to state 48
+    exp_create_valid_char          shift and go to state 49
+    exp_create_valid_int           shift and go to state 50
+    exp_create_valid_float         shift and go to state 51
+    exp_create_valid_pk            shift and go to state 52
 
-state 37
+state 39
 
     (9) exp_create -> CREATE INDEX COLUMN_OR_TABLE ON . COLUMN_OR_TABLE LPAREN COLUMN_OR_TABLE RPAREN END
 
-    COLUMN_OR_TABLE shift and go to state 52
+    COLUMN_OR_TABLE shift and go to state 54
 
 
-state 38
+state 40
 
     (31) exp_insert -> INSERT INTO COLUMN_OR_TABLE exp_insert_line .
 
     $end            reduce using rule 31 (exp_insert -> INSERT INTO COLUMN_OR_TABLE exp_insert_line .)
 
 
-state 39
+state 41
 
     (32) exp_insert_line -> VALUES . LPAREN columns RPAREN END
 
-    LPAREN          shift and go to state 53
+    LPAREN          shift and go to state 55
 
 
-state 40
+state 42
 
     (27) exp_select -> SELECT STAR FROM COLUMN_OR_TABLE END .
 
     $end            reduce using rule 27 (exp_select -> SELECT STAR FROM COLUMN_OR_TABLE END .)
 
 
-state 41
+state 43
 
     (28) exp_select -> SELECT STAR FROM COLUMN_OR_TABLE exp_condition .
 
     $end            reduce using rule 28 (exp_select -> SELECT STAR FROM COLUMN_OR_TABLE exp_condition .)
 
 
-state 42
+state 44
 
     (35) exp_condition -> WHERE exp_all_conditions . END
 
-    END             shift and go to state 54
+    END             shift and go to state 56
 
 
-state 43
+state 45
 
     (36) exp_all_conditions -> COLUMN_OR_TABLE . COMPARATOR COLUMN_OR_TABLE
     (37) exp_all_conditions -> COLUMN_OR_TABLE . COMPARATOR COLUMN_OR_TABLE AND exp_all_conditions
 
-    COMPARATOR      shift and go to state 55
+    COMPARATOR      shift and go to state 57
 
 
-state 44
+state 46
 
     (19) exp_create_valid_char -> COLUMN_OR_TABLE . CHAR LPAREN COLUMN_OR_TABLE RPAREN UNIQUE
     (20) exp_create_valid_char -> COLUMN_OR_TABLE . CHAR LPAREN COLUMN_OR_TABLE RPAREN
@@ -495,28 +509,28 @@ state 44
     (23) exp_create_valid_float -> COLUMN_OR_TABLE . FLOAT
     (24) exp_create_valid_float -> COLUMN_OR_TABLE . FLOAT UNIQUE
 
-    CHAR            shift and go to state 56
-    INT             shift and go to state 57
-    FLOAT           shift and go to state 58
+    CHAR            shift and go to state 58
+    INT             shift and go to state 59
+    FLOAT           shift and go to state 60
 
 
-state 45
+state 47
 
     (8) exp_create -> CREATE TABLE COLUMN_OR_TABLE LPAREN exp_create_columns . RPAREN END
 
-    RPAREN          shift and go to state 59
+    RPAREN          shift and go to state 61
 
 
-state 46
+state 48
 
     (10) exp_create_columns -> exp_create_valid_column .
     (11) exp_create_columns -> exp_create_valid_column . COMMA exp_create_columns
 
     RPAREN          reduce using rule 10 (exp_create_columns -> exp_create_valid_column .)
-    COMMA           shift and go to state 60
+    COMMA           shift and go to state 62
 
 
-state 47
+state 49
 
     (12) exp_create_valid_column -> exp_create_valid_char .
 
@@ -524,7 +538,7 @@ state 47
     RPAREN          reduce using rule 12 (exp_create_valid_column -> exp_create_valid_char .)
 
 
-state 48
+state 50
 
     (13) exp_create_valid_column -> exp_create_valid_int .
 
@@ -532,7 +546,7 @@ state 48
     RPAREN          reduce using rule 13 (exp_create_valid_column -> exp_create_valid_int .)
 
 
-state 49
+state 51
 
     (14) exp_create_valid_column -> exp_create_valid_float .
 
@@ -540,7 +554,7 @@ state 49
     RPAREN          reduce using rule 14 (exp_create_valid_column -> exp_create_valid_float .)
 
 
-state 50
+state 52
 
     (15) exp_create_valid_column -> exp_create_valid_pk .
 
@@ -548,81 +562,81 @@ state 50
     RPAREN          reduce using rule 15 (exp_create_valid_column -> exp_create_valid_pk .)
 
 
-state 51
+state 53
 
     (16) exp_create_valid_pk -> PRIMARY . KEY LPAREN exp_pk RPAREN
 
-    KEY             shift and go to state 61
+    KEY             shift and go to state 63
 
 
-state 52
+state 54
 
     (9) exp_create -> CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE . LPAREN COLUMN_OR_TABLE RPAREN END
 
-    LPAREN          shift and go to state 62
+    LPAREN          shift and go to state 64
 
 
-state 53
+state 55
 
     (32) exp_insert_line -> VALUES LPAREN . columns RPAREN END
     (33) columns -> . COLUMN_OR_TABLE
     (34) columns -> . COLUMN_OR_TABLE COMMA columns
 
-    COLUMN_OR_TABLE shift and go to state 64
+    COLUMN_OR_TABLE shift and go to state 66
 
-    columns                        shift and go to state 63
+    columns                        shift and go to state 65
 
-state 54
+state 56
 
     (35) exp_condition -> WHERE exp_all_conditions END .
 
     $end            reduce using rule 35 (exp_condition -> WHERE exp_all_conditions END .)
 
 
-state 55
+state 57
 
     (36) exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR . COLUMN_OR_TABLE
     (37) exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR . COLUMN_OR_TABLE AND exp_all_conditions
 
-    COLUMN_OR_TABLE shift and go to state 65
+    COLUMN_OR_TABLE shift and go to state 67
 
 
-state 56
+state 58
 
     (19) exp_create_valid_char -> COLUMN_OR_TABLE CHAR . LPAREN COLUMN_OR_TABLE RPAREN UNIQUE
     (20) exp_create_valid_char -> COLUMN_OR_TABLE CHAR . LPAREN COLUMN_OR_TABLE RPAREN
 
-    LPAREN          shift and go to state 66
+    LPAREN          shift and go to state 68
 
 
-state 57
+state 59
 
     (21) exp_create_valid_int -> COLUMN_OR_TABLE INT .
     (22) exp_create_valid_int -> COLUMN_OR_TABLE INT . UNIQUE
 
     COMMA           reduce using rule 21 (exp_create_valid_int -> COLUMN_OR_TABLE INT .)
     RPAREN          reduce using rule 21 (exp_create_valid_int -> COLUMN_OR_TABLE INT .)
-    UNIQUE          shift and go to state 67
+    UNIQUE          shift and go to state 69
 
 
-state 58
+state 60
 
     (23) exp_create_valid_float -> COLUMN_OR_TABLE FLOAT .
     (24) exp_create_valid_float -> COLUMN_OR_TABLE FLOAT . UNIQUE
 
     COMMA           reduce using rule 23 (exp_create_valid_float -> COLUMN_OR_TABLE FLOAT .)
     RPAREN          reduce using rule 23 (exp_create_valid_float -> COLUMN_OR_TABLE FLOAT .)
-    UNIQUE          shift and go to state 68
+    UNIQUE          shift and go to state 70
 
 
-state 59
+state 61
 
     (8) exp_create -> CREATE TABLE COLUMN_OR_TABLE LPAREN exp_create_columns RPAREN . END
 
-    END             shift and go to state 69
+    END             shift and go to state 71
 
 
-state 60
+state 62
 
     (11) exp_create_columns -> exp_create_valid_column COMMA . exp_create_columns
     (10) exp_create_columns -> . exp_create_valid_column
@@ -639,64 +653,64 @@ state 60
     (24) exp_create_valid_float -> . COLUMN_OR_TABLE FLOAT UNIQUE
     (16) exp_create_valid_pk -> . PRIMARY KEY LPAREN exp_pk RPAREN
 
-    COLUMN_OR_TABLE shift and go to state 44
-    PRIMARY         shift and go to state 51
+    COLUMN_OR_TABLE shift and go to state 46
+    PRIMARY         shift and go to state 53
 
-    exp_create_valid_column        shift and go to state 46
-    exp_create_columns             shift and go to state 70
-    exp_create_valid_char          shift and go to state 47
-    exp_create_valid_int           shift and go to state 48
-    exp_create_valid_float         shift and go to state 49
-    exp_create_valid_pk            shift and go to state 50
-
-state 61
-
-    (16) exp_create_valid_pk -> PRIMARY KEY . LPAREN exp_pk RPAREN
-
-    LPAREN          shift and go to state 71
-
-
-state 62
-
-    (9) exp_create -> CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE LPAREN . COLUMN_OR_TABLE RPAREN END
-
-    COLUMN_OR_TABLE shift and go to state 72
-
+    exp_create_valid_column        shift and go to state 48
+    exp_create_columns             shift and go to state 72
+    exp_create_valid_char          shift and go to state 49
+    exp_create_valid_int           shift and go to state 50
+    exp_create_valid_float         shift and go to state 51
+    exp_create_valid_pk            shift and go to state 52
 
 state 63
 
-    (32) exp_insert_line -> VALUES LPAREN columns . RPAREN END
+    (16) exp_create_valid_pk -> PRIMARY KEY . LPAREN exp_pk RPAREN
 
-    RPAREN          shift and go to state 73
+    LPAREN          shift and go to state 73
 
 
 state 64
+
+    (9) exp_create -> CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE LPAREN . COLUMN_OR_TABLE RPAREN END
+
+    COLUMN_OR_TABLE shift and go to state 74
+
+
+state 65
+
+    (32) exp_insert_line -> VALUES LPAREN columns . RPAREN END
+
+    RPAREN          shift and go to state 75
+
+
+state 66
 
     (33) columns -> COLUMN_OR_TABLE .
     (34) columns -> COLUMN_OR_TABLE . COMMA columns
 
     RPAREN          reduce using rule 33 (columns -> COLUMN_OR_TABLE .)
-    COMMA           shift and go to state 74
+    COMMA           shift and go to state 76
 
 
-state 65
+state 67
 
     (36) exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE .
     (37) exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE . AND exp_all_conditions
 
     END             reduce using rule 36 (exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE .)
-    AND             shift and go to state 75
+    AND             shift and go to state 77
 
 
-state 66
+state 68
 
     (19) exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN . COLUMN_OR_TABLE RPAREN UNIQUE
     (20) exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN . COLUMN_OR_TABLE RPAREN
 
-    COLUMN_OR_TABLE shift and go to state 76
+    COLUMN_OR_TABLE shift and go to state 78
 
 
-state 67
+state 69
 
     (22) exp_create_valid_int -> COLUMN_OR_TABLE INT UNIQUE .
 
@@ -704,7 +718,7 @@ state 67
     RPAREN          reduce using rule 22 (exp_create_valid_int -> COLUMN_OR_TABLE INT UNIQUE .)
 
 
-state 68
+state 70
 
     (24) exp_create_valid_float -> COLUMN_OR_TABLE FLOAT UNIQUE .
 
@@ -712,127 +726,127 @@ state 68
     RPAREN          reduce using rule 24 (exp_create_valid_float -> COLUMN_OR_TABLE FLOAT UNIQUE .)
 
 
-state 69
+state 71
 
     (8) exp_create -> CREATE TABLE COLUMN_OR_TABLE LPAREN exp_create_columns RPAREN END .
 
     $end            reduce using rule 8 (exp_create -> CREATE TABLE COLUMN_OR_TABLE LPAREN exp_create_columns RPAREN END .)
 
 
-state 70
+state 72
 
     (11) exp_create_columns -> exp_create_valid_column COMMA exp_create_columns .
 
     RPAREN          reduce using rule 11 (exp_create_columns -> exp_create_valid_column COMMA exp_create_columns .)
 
 
-state 71
+state 73
 
     (16) exp_create_valid_pk -> PRIMARY KEY LPAREN . exp_pk RPAREN
     (17) exp_pk -> . COLUMN_OR_TABLE
     (18) exp_pk -> . COLUMN_OR_TABLE COMMA exp_pk
 
-    COLUMN_OR_TABLE shift and go to state 78
+    COLUMN_OR_TABLE shift and go to state 80
 
-    exp_pk                         shift and go to state 77
+    exp_pk                         shift and go to state 79
 
-state 72
+state 74
 
     (9) exp_create -> CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE LPAREN COLUMN_OR_TABLE . RPAREN END
 
-    RPAREN          shift and go to state 79
+    RPAREN          shift and go to state 81
 
 
-state 73
+state 75
 
     (32) exp_insert_line -> VALUES LPAREN columns RPAREN . END
 
-    END             shift and go to state 80
+    END             shift and go to state 82
 
 
-state 74
+state 76
 
     (34) columns -> COLUMN_OR_TABLE COMMA . columns
     (33) columns -> . COLUMN_OR_TABLE
     (34) columns -> . COLUMN_OR_TABLE COMMA columns
 
-    COLUMN_OR_TABLE shift and go to state 64
+    COLUMN_OR_TABLE shift and go to state 66
 
-    columns                        shift and go to state 81
+    columns                        shift and go to state 83
 
-state 75
+state 77
 
     (37) exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE AND . exp_all_conditions
     (36) exp_all_conditions -> . COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE
     (37) exp_all_conditions -> . COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE AND exp_all_conditions
 
-    COLUMN_OR_TABLE shift and go to state 43
+    COLUMN_OR_TABLE shift and go to state 45
 
-    exp_all_conditions             shift and go to state 82
+    exp_all_conditions             shift and go to state 84
 
-state 76
+state 78
 
     (19) exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE . RPAREN UNIQUE
     (20) exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE . RPAREN
 
-    RPAREN          shift and go to state 83
+    RPAREN          shift and go to state 85
 
 
-state 77
+state 79
 
     (16) exp_create_valid_pk -> PRIMARY KEY LPAREN exp_pk . RPAREN
 
-    RPAREN          shift and go to state 84
+    RPAREN          shift and go to state 86
 
 
-state 78
+state 80
 
     (17) exp_pk -> COLUMN_OR_TABLE .
     (18) exp_pk -> COLUMN_OR_TABLE . COMMA exp_pk
 
     RPAREN          reduce using rule 17 (exp_pk -> COLUMN_OR_TABLE .)
-    COMMA           shift and go to state 85
+    COMMA           shift and go to state 87
 
 
-state 79
+state 81
 
     (9) exp_create -> CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE LPAREN COLUMN_OR_TABLE RPAREN . END
 
-    END             shift and go to state 86
+    END             shift and go to state 88
 
 
-state 80
+state 82
 
     (32) exp_insert_line -> VALUES LPAREN columns RPAREN END .
 
     $end            reduce using rule 32 (exp_insert_line -> VALUES LPAREN columns RPAREN END .)
 
 
-state 81
+state 83
 
     (34) columns -> COLUMN_OR_TABLE COMMA columns .
 
     RPAREN          reduce using rule 34 (columns -> COLUMN_OR_TABLE COMMA columns .)
 
 
-state 82
+state 84
 
     (37) exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE AND exp_all_conditions .
 
     END             reduce using rule 37 (exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE AND exp_all_conditions .)
 
 
-state 83
+state 85
 
     (19) exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN . UNIQUE
     (20) exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN .
 
-    UNIQUE          shift and go to state 87
+    UNIQUE          shift and go to state 89
     COMMA           reduce using rule 20 (exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN .)
     RPAREN          reduce using rule 20 (exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN .)
 
 
-state 84
+state 86
 
     (16) exp_create_valid_pk -> PRIMARY KEY LPAREN exp_pk RPAREN .
 
@@ -840,24 +854,24 @@ state 84
     RPAREN          reduce using rule 16 (exp_create_valid_pk -> PRIMARY KEY LPAREN exp_pk RPAREN .)
 
 
-state 85
+state 87
 
     (18) exp_pk -> COLUMN_OR_TABLE COMMA . exp_pk
     (17) exp_pk -> . COLUMN_OR_TABLE
     (18) exp_pk -> . COLUMN_OR_TABLE COMMA exp_pk
 
-    COLUMN_OR_TABLE shift and go to state 78
+    COLUMN_OR_TABLE shift and go to state 80
 
-    exp_pk                         shift and go to state 88
+    exp_pk                         shift and go to state 90
 
-state 86
+state 88
 
     (9) exp_create -> CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE LPAREN COLUMN_OR_TABLE RPAREN END .
 
     $end            reduce using rule 9 (exp_create -> CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE LPAREN COLUMN_OR_TABLE RPAREN END .)
 
 
-state 87
+state 89
 
     (19) exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN UNIQUE .
 
@@ -865,7 +879,7 @@ state 87
     RPAREN          reduce using rule 19 (exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN UNIQUE .)
 
 
-state 88
+state 90
 
     (18) exp_pk -> COLUMN_OR_TABLE COMMA exp_pk .
 

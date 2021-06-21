@@ -227,7 +227,7 @@ class BufferManager:
         page_header = cls._read_file_header(file_name)
         for i in range(page_header.size):
             cls.remove_block(file_name, i+1, force=True)
-        os.remove(os.path.join(utils.DB_BASE_FOLDER, file_name))
+        os.remove(os.path.join(utils.DB_FILE_FOLDER, file_name))
 
     @classmethod
     def force_clear_buffer(cls):

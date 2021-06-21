@@ -15,3 +15,6 @@ insert into t1 values(3, 'bbb', 2, 'cc');
 select * from t1 where sage=2;
 delete from t1 where sage=1;
 select * from t1;
+
+drop index i1;
+drop table t1;

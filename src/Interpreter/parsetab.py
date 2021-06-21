@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'AND CHAR COLUMN_OR_TABLE COMMA COMPARATOR CREATE DELETE DROP END EXECFILE FLOAT FROM INDEX INSERT INT INTO KEY LPAREN ON PK PRIMARY QUIT RPAREN SELECT STAR TABLE UNIQUE VALUES WHEREexpression : exp_drop\n                  | exp_select\n                  | exp_delete\n                  | exp_create\n                  | exp_insert\n                  | exp_quit\n                  | exp_execfileexp_create : CREATE TABLE COLUMN_OR_TABLE LPAREN exp_create_columns RPAREN END\n                  | CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE LPAREN COLUMN_OR_TABLE RPAREN ENDexp_create_columns : exp_create_valid_column\n                          | exp_create_valid_column COMMA exp_create_columnsexp_create_valid_column : exp_create_valid_char\n                               | exp_create_valid_int\n                               | exp_create_valid_float\n                               | exp_create_valid_pkexp_create_valid_pk : PRIMARY KEY LPAREN exp_pk RPARENexp_pk : COLUMN_OR_TABLE\n              | COLUMN_OR_TABLE COMMA exp_pkexp_create_valid_char : COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN UNIQUE\n                               | COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPARENexp_create_valid_int : COLUMN_OR_TABLE INT\n                            | COLUMN_OR_TABLE INT UNIQUEexp_create_valid_float : COLUMN_OR_TABLE FLOAT\n                              | COLUMN_OR_TABLE FLOAT UNIQUEexp_drop : DROP TABLE COLUMN_OR_TABLE \n                | DROP INDEX COLUMN_OR_TABLEexp_select : SELECT STAR FROM COLUMN_OR_TABLE END\n                  | SELECT STAR FROM COLUMN_OR_TABLE exp_conditionexp_delete : DELETE FROM COLUMN_OR_TABLE END\n                  | DELETE FROM COLUMN_OR_TABLE exp_conditionexp_insert : INSERT INTO COLUMN_OR_TABLE exp_insert_lineexp_insert_line : VALUES LPAREN columns RPAREN ENDcolumns : COLUMN_OR_TABLE\n               | COLUMN_OR_TABLE COMMA columnsexp_condition : WHERE exp_all_conditions ENDexp_all_conditions : COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE\n                          | COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE AND exp_all_conditionsexp_quit : QUITexp_execfile : EXECFILE COLUMN_OR_TABLE END'
+_lr_signature = 'AND CHAR COLUMN_OR_TABLE COMMA COMPARATOR CREATE DELETE DROP END EXECFILE FLOAT FROM INDEX INSERT INT INTO KEY LPAREN ON PK PRIMARY QUIT RPAREN SELECT STAR TABLE UNIQUE VALUES WHEREexpression : exp_drop\n                  | exp_select\n                  | exp_delete\n                  | exp_create\n                  | exp_insert\n                  | exp_quit\n                  | exp_execfileexp_create : CREATE TABLE COLUMN_OR_TABLE LPAREN exp_create_columns RPAREN END\n                  | CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE LPAREN COLUMN_OR_TABLE RPAREN ENDexp_create_columns : exp_create_valid_column\n                          | exp_create_valid_column COMMA exp_create_columnsexp_create_valid_column : exp_create_valid_char\n                               | exp_create_valid_int\n                               | exp_create_valid_float\n                               | exp_create_valid_pkexp_create_valid_pk : PRIMARY KEY LPAREN exp_pk RPARENexp_pk : COLUMN_OR_TABLE\n              | COLUMN_OR_TABLE COMMA exp_pkexp_create_valid_char : COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN UNIQUE\n                               | COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPARENexp_create_valid_int : COLUMN_OR_TABLE INT\n                            | COLUMN_OR_TABLE INT UNIQUEexp_create_valid_float : COLUMN_OR_TABLE FLOAT\n                              | COLUMN_OR_TABLE FLOAT UNIQUEexp_drop : DROP TABLE COLUMN_OR_TABLE END \n                | DROP INDEX COLUMN_OR_TABLE ENDexp_select : SELECT STAR FROM COLUMN_OR_TABLE END\n                  | SELECT STAR FROM COLUMN_OR_TABLE exp_conditionexp_delete : DELETE FROM COLUMN_OR_TABLE END\n                  | DELETE FROM COLUMN_OR_TABLE exp_conditionexp_insert : INSERT INTO COLUMN_OR_TABLE exp_insert_lineexp_insert_line : VALUES LPAREN columns RPAREN ENDcolumns : COLUMN_OR_TABLE\n               | COLUMN_OR_TABLE COMMA columnsexp_condition : WHERE exp_all_conditions ENDexp_all_conditions : COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE\n                          | COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE AND exp_all_conditionsexp_quit : QUITexp_execfile : EXECFILE COLUMN_OR_TABLE END'
     
-_lr_action_items = {'DROP':([0,],[9,]),'SELECT':([0,],[10,]),'DELETE':([0,],[11,]),'CREATE':([0,],[12,]),'INSERT':([0,],[13,]),'QUIT':([0,],[14,]),'EXECFILE':([0,],[15,]),'$end':([1,2,3,4,5,6,7,8,14,24,25,31,33,34,38,40,41,54,69,80,86,],[0,-1,-2,-3,-4,-5,-6,-7,-38,-25,-26,-39,-29,-30,-31,-27,-28,-35,-8,-32,-9,]),'TABLE':([9,12,],[16,20,]),'INDEX':([9,12,],[17,21,]),'STAR':([10,],[18,]),'FROM':([11,18,],[19,26,]),'INTO':([13,],[22,]),'COLUMN_OR_TABLE':([15,16,17,19,20,21,22,26,35,36,37,53,55,60,62,66,71,74,75,85,],[23,24,25,27,28,29,30,32,43,44,52,64,65,44,72,76,78,64,43,78,]),'END':([23,27,32,42,59,65,73,79,82,],[31,33,40,54,69,-36,80,86,-37,]),'WHERE':([27,32,],[35,35,]),'LPAREN':([28,39,52,56,61,],[36,53,62,66,71,]),'ON':([29,],[37,]),'VALUES':([30,],[39,]),'PRIMARY':([36,60,],[51,51,]),'COMPARATOR':([43,],[55,]),'CHAR':([44,],[56,]),'INT':([44,],[57,]),'FLOAT':([44,],[58,]),'RPAREN':([45,46,47,48,49,50,57,58,63,64,67,68,70,72,76,77,78,81,83,84,87,88,],[59,-10,-12,-13,-14,-15,-21,-23,73,-33,-22,-24,-11,79,83,84,-17,-34,-20,-16,-19,-18,]),'COMMA':([46,47,48,49,50,57,58,64,67,68,78,83,84,87,],[60,-12,-13,-14,-15,-21,-23,74,-22,-24,85,-20,-16,-19,]),'KEY':([51,],[61,]),'UNIQUE':([57,58,83,],[67,68,87,]),'AND':([65,],[75,]),}
+_lr_action_items = {'DROP':([0,],[9,]),'SELECT':([0,],[10,]),'DELETE':([0,],[11,]),'CREATE':([0,],[12,]),'INSERT':([0,],[13,]),'QUIT':([0,],[14,]),'EXECFILE':([0,],[15,]),'$end':([1,2,3,4,5,6,7,8,14,31,32,33,35,36,40,42,43,56,71,82,88,],[0,-1,-2,-3,-4,-5,-6,-7,-38,-39,-25,-26,-29,-30,-31,-27,-28,-35,-8,-32,-9,]),'TABLE':([9,12,],[16,20,]),'INDEX':([9,12,],[17,21,]),'STAR':([10,],[18,]),'FROM':([11,18,],[19,26,]),'INTO':([13,],[22,]),'COLUMN_OR_TABLE':([15,16,17,19,20,21,22,26,37,38,39,55,57,62,64,68,73,76,77,87,],[23,24,25,27,28,29,30,34,45,46,54,66,67,46,74,78,80,66,45,80,]),'END':([23,24,25,27,34,44,61,67,75,81,84,],[31,32,33,35,42,56,71,-36,82,88,-37,]),'WHERE':([27,34,],[37,37,]),'LPAREN':([28,41,54,58,63,],[38,55,64,68,73,]),'ON':([29,],[39,]),'VALUES':([30,],[41,]),'PRIMARY':([38,62,],[53,53,]),'COMPARATOR':([45,],[57,]),'CHAR':([46,],[58,]),'INT':([46,],[59,]),'FLOAT':([46,],[60,]),'RPAREN':([47,48,49,50,51,52,59,60,65,66,69,70,72,74,78,79,80,83,85,86,89,90,],[61,-10,-12,-13,-14,-15,-21,-23,75,-33,-22,-24,-11,81,85,86,-17,-34,-20,-16,-19,-18,]),'COMMA':([48,49,50,51,52,59,60,66,69,70,80,85,86,89,],[62,-12,-13,-14,-15,-21,-23,76,-22,-24,87,-20,-16,-19,]),'KEY':([53,],[63,]),'UNIQUE':([59,60,85,],[69,70,89,]),'AND':([67,],[77,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'expression':([0,],[1,]),'exp_drop':([0,],[2,]),'exp_select':([0,],[3,]),'exp_delete':([0,],[4,]),'exp_create':([0,],[5,]),'exp_insert':([0,],[6,]),'exp_quit':([0,],[7,]),'exp_execfile':([0,],[8,]),'exp_condition':([27,32,],[34,41,]),'exp_insert_line':([30,],[38,]),'exp_all_conditions':([35,75,],[42,82,]),'exp_create_columns':([36,60,],[45,70,]),'exp_create_valid_column':([36,60,],[46,46,]),'exp_create_valid_char':([36,60,],[47,47,]),'exp_create_valid_int':([36,60,],[48,48,]),'exp_create_valid_float':([36,60,],[49,49,]),'exp_create_valid_pk':([36,60,],[50,50,]),'columns':([53,74,],[63,81,]),'exp_pk':([71,85,],[77,88,]),}
+_lr_goto_items = {'expression':([0,],[1,]),'exp_drop':([0,],[2,]),'exp_select':([0,],[3,]),'exp_delete':([0,],[4,]),'exp_create':([0,],[5,]),'exp_insert':([0,],[6,]),'exp_quit':([0,],[7,]),'exp_execfile':([0,],[8,]),'exp_condition':([27,34,],[36,43,]),'exp_insert_line':([30,],[40,]),'exp_all_conditions':([37,77,],[44,84,]),'exp_create_columns':([38,62,],[47,72,]),'exp_create_valid_column':([38,62,],[48,48,]),'exp_create_valid_char':([38,62,],[49,49,]),'exp_create_valid_int':([38,62,],[50,50,]),'exp_create_valid_float':([38,62,],[51,51,]),'exp_create_valid_pk':([38,62,],[52,52,]),'columns':([55,76,],[65,83,]),'exp_pk':([73,87,],[79,90,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,43 +27,43 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> exp_drop','expression',1,'p_expression_start','interpreter.py',128),
-  ('expression -> exp_select','expression',1,'p_expression_start','interpreter.py',129),
-  ('expression -> exp_delete','expression',1,'p_expression_start','interpreter.py',130),
-  ('expression -> exp_create','expression',1,'p_expression_start','interpreter.py',131),
-  ('expression -> exp_insert','expression',1,'p_expression_start','interpreter.py',132),
-  ('expression -> exp_quit','expression',1,'p_expression_start','interpreter.py',133),
-  ('expression -> exp_execfile','expression',1,'p_expression_start','interpreter.py',134),
-  ('exp_create -> CREATE TABLE COLUMN_OR_TABLE LPAREN exp_create_columns RPAREN END','exp_create',7,'p_expression_create','interpreter.py',137),
-  ('exp_create -> CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE LPAREN COLUMN_OR_TABLE RPAREN END','exp_create',9,'p_expression_create','interpreter.py',138),
-  ('exp_create_columns -> exp_create_valid_column','exp_create_columns',1,'p_expression_create_columns','interpreter.py',158),
-  ('exp_create_columns -> exp_create_valid_column COMMA exp_create_columns','exp_create_columns',3,'p_expression_create_columns','interpreter.py',159),
-  ('exp_create_valid_column -> exp_create_valid_char','exp_create_valid_column',1,'p_expression_create_valid_column','interpreter.py',163),
-  ('exp_create_valid_column -> exp_create_valid_int','exp_create_valid_column',1,'p_expression_create_valid_column','interpreter.py',164),
-  ('exp_create_valid_column -> exp_create_valid_float','exp_create_valid_column',1,'p_expression_create_valid_column','interpreter.py',165),
-  ('exp_create_valid_column -> exp_create_valid_pk','exp_create_valid_column',1,'p_expression_create_valid_column','interpreter.py',166),
-  ('exp_create_valid_pk -> PRIMARY KEY LPAREN exp_pk RPAREN','exp_create_valid_pk',5,'p_expression_create_pk','interpreter.py',170),
-  ('exp_pk -> COLUMN_OR_TABLE','exp_pk',1,'p_expression_pk','interpreter.py',174),
-  ('exp_pk -> COLUMN_OR_TABLE COMMA exp_pk','exp_pk',3,'p_expression_pk','interpreter.py',175),
-  ('exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN UNIQUE','exp_create_valid_char',6,'p_expression_create_valid_char','interpreter.py',179),
-  ('exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN','exp_create_valid_char',5,'p_expression_create_valid_char','interpreter.py',180),
-  ('exp_create_valid_int -> COLUMN_OR_TABLE INT','exp_create_valid_int',2,'p_expression_create_valid_int','interpreter.py',191),
-  ('exp_create_valid_int -> COLUMN_OR_TABLE INT UNIQUE','exp_create_valid_int',3,'p_expression_create_valid_int','interpreter.py',192),
-  ('exp_create_valid_float -> COLUMN_OR_TABLE FLOAT','exp_create_valid_float',2,'p_expression_create_valid_float','interpreter.py',202),
-  ('exp_create_valid_float -> COLUMN_OR_TABLE FLOAT UNIQUE','exp_create_valid_float',3,'p_expression_create_valid_float','interpreter.py',203),
-  ('exp_drop -> DROP TABLE COLUMN_OR_TABLE','exp_drop',3,'p_expression_drop','interpreter.py',213),
-  ('exp_drop -> DROP INDEX COLUMN_OR_TABLE','exp_drop',3,'p_expression_drop','interpreter.py',214),
-  ('exp_select -> SELECT STAR FROM COLUMN_OR_TABLE END','exp_select',5,'p_expression_select','interpreter.py',232),
-  ('exp_select -> SELECT STAR FROM COLUMN_OR_TABLE exp_condition','exp_select',5,'p_expression_select','interpreter.py',233),
-  ('exp_delete -> DELETE FROM COLUMN_OR_TABLE END','exp_delete',4,'p_expression_delete','interpreter.py',240),
-  ('exp_delete -> DELETE FROM COLUMN_OR_TABLE exp_condition','exp_delete',4,'p_expression_delete','interpreter.py',241),
-  ('exp_insert -> INSERT INTO COLUMN_OR_TABLE exp_insert_line','exp_insert',4,'p_expression_insert','interpreter.py',249),
-  ('exp_insert_line -> VALUES LPAREN columns RPAREN END','exp_insert_line',5,'p_expression_insert_line','interpreter.py',259),
-  ('columns -> COLUMN_OR_TABLE','columns',1,'p_expression_columns','interpreter.py',262),
-  ('columns -> COLUMN_OR_TABLE COMMA columns','columns',3,'p_expression_columns','interpreter.py',263),
-  ('exp_condition -> WHERE exp_all_conditions END','exp_condition',3,'p_expression_condition','interpreter.py',268),
-  ('exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE','exp_all_conditions',3,'p_expression_all_conditions','interpreter.py',271),
-  ('exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE AND exp_all_conditions','exp_all_conditions',5,'p_expression_all_conditions','interpreter.py',272),
-  ('exp_quit -> QUIT','exp_quit',1,'p_expression_quit','interpreter.py',282),
-  ('exp_execfile -> EXECFILE COLUMN_OR_TABLE END','exp_execfile',3,'p_expression_execfile','interpreter.py',288),
+  ('expression -> exp_drop','expression',1,'p_expression_start','Interpreter.py',131),
+  ('expression -> exp_select','expression',1,'p_expression_start','Interpreter.py',132),
+  ('expression -> exp_delete','expression',1,'p_expression_start','Interpreter.py',133),
+  ('expression -> exp_create','expression',1,'p_expression_start','Interpreter.py',134),
+  ('expression -> exp_insert','expression',1,'p_expression_start','Interpreter.py',135),
+  ('expression -> exp_quit','expression',1,'p_expression_start','Interpreter.py',136),
+  ('expression -> exp_execfile','expression',1,'p_expression_start','Interpreter.py',137),
+  ('exp_create -> CREATE TABLE COLUMN_OR_TABLE LPAREN exp_create_columns RPAREN END','exp_create',7,'p_expression_create','Interpreter.py',140),
+  ('exp_create -> CREATE INDEX COLUMN_OR_TABLE ON COLUMN_OR_TABLE LPAREN COLUMN_OR_TABLE RPAREN END','exp_create',9,'p_expression_create','Interpreter.py',141),
+  ('exp_create_columns -> exp_create_valid_column','exp_create_columns',1,'p_expression_create_columns','Interpreter.py',167),
+  ('exp_create_columns -> exp_create_valid_column COMMA exp_create_columns','exp_create_columns',3,'p_expression_create_columns','Interpreter.py',168),
+  ('exp_create_valid_column -> exp_create_valid_char','exp_create_valid_column',1,'p_expression_create_valid_column','Interpreter.py',172),
+  ('exp_create_valid_column -> exp_create_valid_int','exp_create_valid_column',1,'p_expression_create_valid_column','Interpreter.py',173),
+  ('exp_create_valid_column -> exp_create_valid_float','exp_create_valid_column',1,'p_expression_create_valid_column','Interpreter.py',174),
+  ('exp_create_valid_column -> exp_create_valid_pk','exp_create_valid_column',1,'p_expression_create_valid_column','Interpreter.py',175),
+  ('exp_create_valid_pk -> PRIMARY KEY LPAREN exp_pk RPAREN','exp_create_valid_pk',5,'p_expression_create_pk','Interpreter.py',179),
+  ('exp_pk -> COLUMN_OR_TABLE','exp_pk',1,'p_expression_pk','Interpreter.py',183),
+  ('exp_pk -> COLUMN_OR_TABLE COMMA exp_pk','exp_pk',3,'p_expression_pk','Interpreter.py',184),
+  ('exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN UNIQUE','exp_create_valid_char',6,'p_expression_create_valid_char','Interpreter.py',188),
+  ('exp_create_valid_char -> COLUMN_OR_TABLE CHAR LPAREN COLUMN_OR_TABLE RPAREN','exp_create_valid_char',5,'p_expression_create_valid_char','Interpreter.py',189),
+  ('exp_create_valid_int -> COLUMN_OR_TABLE INT','exp_create_valid_int',2,'p_expression_create_valid_int','Interpreter.py',200),
+  ('exp_create_valid_int -> COLUMN_OR_TABLE INT UNIQUE','exp_create_valid_int',3,'p_expression_create_valid_int','Interpreter.py',201),
+  ('exp_create_valid_float -> COLUMN_OR_TABLE FLOAT','exp_create_valid_float',2,'p_expression_create_valid_float','Interpreter.py',210),
+  ('exp_create_valid_float -> COLUMN_OR_TABLE FLOAT UNIQUE','exp_create_valid_float',3,'p_expression_create_valid_float','Interpreter.py',211),
+  ('exp_drop -> DROP TABLE COLUMN_OR_TABLE END','exp_drop',4,'p_expression_drop','Interpreter.py',221),
+  ('exp_drop -> DROP INDEX COLUMN_OR_TABLE END','exp_drop',4,'p_expression_drop','Interpreter.py',222),
+  ('exp_select -> SELECT STAR FROM COLUMN_OR_TABLE END','exp_select',5,'p_expression_select','Interpreter.py',245),
+  ('exp_select -> SELECT STAR FROM COLUMN_OR_TABLE exp_condition','exp_select',5,'p_expression_select','Interpreter.py',246),
+  ('exp_delete -> DELETE FROM COLUMN_OR_TABLE END','exp_delete',4,'p_expression_delete','Interpreter.py',269),
+  ('exp_delete -> DELETE FROM COLUMN_OR_TABLE exp_condition','exp_delete',4,'p_expression_delete','Interpreter.py',270),
+  ('exp_insert -> INSERT INTO COLUMN_OR_TABLE exp_insert_line','exp_insert',4,'p_expression_insert','Interpreter.py',280),
+  ('exp_insert_line -> VALUES LPAREN columns RPAREN END','exp_insert_line',5,'p_expression_insert_line','Interpreter.py',294),
+  ('columns -> COLUMN_OR_TABLE','columns',1,'p_expression_columns','Interpreter.py',297),
+  ('columns -> COLUMN_OR_TABLE COMMA columns','columns',3,'p_expression_columns','Interpreter.py',298),
+  ('exp_condition -> WHERE exp_all_conditions END','exp_condition',3,'p_expression_condition','Interpreter.py',304),
+  ('exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE','exp_all_conditions',3,'p_expression_all_conditions','Interpreter.py',307),
+  ('exp_all_conditions -> COLUMN_OR_TABLE COMPARATOR COLUMN_OR_TABLE AND exp_all_conditions','exp_all_conditions',5,'p_expression_all_conditions','Interpreter.py',308),
+  ('exp_quit -> QUIT','exp_quit',1,'p_expression_quit','Interpreter.py',318),
+  ('exp_execfile -> EXECFILE COLUMN_OR_TABLE END','exp_execfile',3,'p_expression_execfile','Interpreter.py',324),
 ]
