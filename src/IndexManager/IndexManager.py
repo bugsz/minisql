@@ -81,14 +81,14 @@ class IndexManager:
         root = IO.get_node(index_id, header.root)
         leafNode, k = BPTree.find(root, lower)
         # print("BM INFO: {}, {}".format(leafNode.key, leafNode.key[k]))
+        ret = []
+        if leafNode == None:
+            return ret
         if not includeL and lower == leafNode.key[k]:
             k += 1
             if k == leafNode.size:
                 leafNode = IO.get_node(index_id, leafNode.next)
                 k = 0
-        ret = []
-        if leafNode == None:
-            return ret
         while leafNode != None:
             while k < leafNode.size and (upper == None or includeR and leafNode.key[k] <= upper or not includeR and leafNode.key[k] < upper):
                 ret.append(leafNode.pointer[k])
