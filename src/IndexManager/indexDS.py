@@ -160,6 +160,8 @@ class BM_IO:
         page = cls.pageMap.get((node.index_id, node.page_id))
         if page == None:
             page = cls.get_page_from_file(node.index_id, node.page_id)
+        if(node.page_id == 1 and node.next == 1):
+            print("LOOP:{}".format(node.key))
         page.is_root = node.is_root
         page.is_leaf = node.is_leaf
         page.next = node.next

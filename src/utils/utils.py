@@ -90,6 +90,8 @@ def print_dbg_info(value):
     
     for cond in value.condition:
         print(cond.lvalue, cond.comparator, cond.rvalue)
+
+    print("---------------END-----------")
     
     
     

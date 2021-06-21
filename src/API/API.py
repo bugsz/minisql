@@ -57,6 +57,7 @@ class API:
         # 创建索引文件
         CatalogManager.create_index(index_name, table_name, attr_name)
         index_id = CatalogManager.get_index_id(index_name)
+        IndexManager.init(index_id)
 
         # 查询所有元组
         selected = RecordManager.select_all_attrs(table_id, attr_id)

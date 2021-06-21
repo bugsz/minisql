@@ -170,6 +170,7 @@ class CatalogManager:
                                                                                    + utils.int_to_byte(-1)\
                                                                                    + utils.int_to_byte(0)))
 
+
     @classmethod
     def drop_table(cls, table_name):
         page_id = cls.table_dict[table_name] // 30 + 1

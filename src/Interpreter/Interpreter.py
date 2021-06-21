@@ -263,9 +263,9 @@ def p_expression_select(p):
         tb = PrettyTable()
         tb.field_names = attr_row
         for tuple in select_result:
-            # print(tuple)
             tb.add_row(tuple)
         print(tb)
+        print("{} row(s) affected".format(len(select_result)))
 
 
 def p_expression_delete(p):
@@ -290,7 +290,7 @@ def p_expression_insert(p):
 
     if check_insert(return_value):
         API.api_insert(return_value)
-        print("Successfully insert values into table")
+        print("1 row(s) affected")
 
 
 def p_expression_insert_line(p):
@@ -563,13 +563,16 @@ def check_insert(return_value):
     unique_value.table_name = table_name
     for i in range(len(attrs)):
         # (attr_name, attr_type, attr_length)
+        if not CatalogManager.attr_unique(table_name, attrs[i][0]):
+            continue
         condition_rvalue = return_value.column_data[i]
         condition_comparator = "="
         condition_lvalue = attrs[i][0]
         unique_value.condition.append(CONDITION(condition_lvalue, condition_comparator, condition_rvalue))
-    
+    # print_dbg_info(unique_value)   
     # 检测是否unique
     data_tuple = API.api_select(unique_value)
+    print(data_tuple)
     if len(data_tuple) != 0:
         print("Inserted data on attribute {} should be unique!".format(attr_name))
         return False
@@ -585,6 +588,7 @@ def execute_user_input():
     data = input("minisql>")
     while ";" not in data:
         data = data + input()
+    data = data.strip("\n")
     print(data)
     
     start_time = time.time()
@@ -615,6 +619,7 @@ def execute_file():
                 if ";" in new_line:
                     break
                 new_line = f.readline()
+            data = data.strip("\n")
             print(data)
             parser.parse(data)
 

@@ -60,6 +60,7 @@ class BPTree:
         IO.update_page(rootNode)
         IO.update_header(newNode.index_id, 1, 0)
         IO.update_header(newNode.index_id, newNode.page_id, 1)
+        print("BPTREE:{}, {}".format(rootNode.next, retNode.next))
         return None
 
     @classmethod

@@ -7,6 +7,10 @@ class IndexManager:
         pass
 
     @classmethod
+    def init(cls, index_id):
+        IO.update_header(index_id, 1, 0)
+
+    @classmethod
     def insert(cls, index_id, position, value):
         """
             插入值为value/物理位置为position=(record_id,page_id)的record
@@ -35,6 +39,7 @@ class IndexManager:
         基于单一condition查询record
         返回list,组成元素为位置元组
         """
+        # print("BM find")
         if condition.comparator == utils.COMPARATOR.EQUAL:
             ret = cls.find_single(index_id, condition.rvalue)
             return [] if ret == None else [ret]
@@ -69,11 +74,13 @@ class IndexManager:
             查询值处于区间[lower,upper]的record
             返回list,组成元素为位置元组
         """
+        # print("find range")
         header = IO.headerMap.get(index_id)
         if header == None:
             header = IO.get_header_from_file(index_id)
         root = IO.get_node(index_id, header.root)
         leafNode, k = BPTree.find(root, lower)
+        # print("BM INFO: {}, {}".format(leafNode.key, leafNode.key[k]))
         if not includeL and lower == leafNode.key[k]:
             k += 1
             if k == leafNode.size:
