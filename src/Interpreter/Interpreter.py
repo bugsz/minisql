@@ -160,6 +160,7 @@ def p_expression_create(p):
 
     else:
         print("Invalid command {}".format(p[2])) 
+        raise SyntaxError
     
 
 def p_expression_create_columns(p):
@@ -347,8 +348,12 @@ def check_delete(return_value):
         if not CatalogManager.attr_exist(table_name, condition.lvalue):
             print("Attribute {} does not exist!".format(condition.lvalue))
             return False
-        condition.rvalue = condition.rvalue.strip("'")
-
+        # condition.rvalue = condition.rvalue.strip("'")
+    
+    return_value = condition_rvalue_decode(return_value)
+    if return_value is None:
+        return False
+    
     return True
 
 def check_select(return_value):
@@ -356,11 +361,19 @@ def check_select(return_value):
         同时把char的'去掉
     """
     table_name = return_value.table_name
+    if not CatalogManager.table_exist(table_name):
+        print("Table does not exist!")
+        return False
+
     for condition in return_value.condition:
         if not CatalogManager.attr_exist(table_name, condition.lvalue):
             print("Attribute {} does not exist!".format(condition.lvalue))
             return False
-        condition.rvalue = condition.rvalue.strip("'")
+        # condition.rvalue = condition.rvalue.strip("'").strip("\"")
+    
+    return_value = condition_rvalue_decode(return_value)
+    if return_value is None:
+        return False
     
     return True
 
@@ -437,9 +450,44 @@ def check_drop_index(return_value):
 
     return True
 
+def condition_rvalue_decode(return_value):
+    table_name = return_value.table_name
+    attrs = CatalogManager.get_attrs_type(table_name)
+    # (attr_name, attr_type, attr_length)
+    for condition in return_value.condition:
+        attr_type = None
+        for attr in attrs:
+            if attr[0] == condition.lvalue:
+                attr_type = attr[1]
+            if attr_type is not None:
+                break
+        if attr_type == VALUETYPE.INT:
+            try:
+                condition.rvalue = int(condition.rvalue)
+            except:
+                print("Rvalue of condition should be INT for attr {}".format(attr.lvalue))
+                return None
+            
+        
+        elif attr_type == VALUETYPE.FLOAT:
+            try:
+                condition.rvalue = float(condition.rvalue)
+            except:
+                print("Rvalue of condition should be FLOAT for attr {}".format(attr.lvalue))
+                return None
+
+        else:
+            if ("'" not in condition.rvalue) and ("\"" not in condition.rvalue):
+                print("You should use "" or '' to specify a string")
+                return None
+            condition.rvalue = condition.rvalue.strip("\"").strip("'")
+
+    return return_value
+
+
 def check_insert(return_value):
 
-    print(type(return_value.table_name))
+    # print(type(return_value.table_name))
     try:
         attrs = CatalogManager.get_attrs_type(return_value.table_name)
     except KeyError:
@@ -549,6 +597,4 @@ def Interpret():
                         new_line = f.readline()
 
                     print(data)
-                    res = parser.parse(data)                    
-
-# interpret()              
+                    res = parser.parse(data)                                 
