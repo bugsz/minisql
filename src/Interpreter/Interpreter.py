@@ -83,7 +83,7 @@ t_COMPARATOR = r"[<>=]{1,2}"
 
 
 def t_COLUMN_OR_TABLE(t):
-    r"[\'a-zA-Z0-9/.-]+"
+    r"[\"_\'a-zA-Z0-9/.-]+"
     if t.value.upper() in tokens:
         t.type = t.value.upper()
     # TODO
@@ -107,11 +107,12 @@ test_lex = "insert into t1 values"
 test_lex = "where a<>1 and b < 1"
 test_lex = "select * from t1 where a = '1' and b = 1"
 lexer.input(test_lex)
+'''
 while True:
     tok = lexer.token()
     if not tok: break
     print(tok)
-
+'''
 
 # ---------- Up: lex, Down: parse ---------------
 
@@ -334,7 +335,9 @@ def p_error(p):
     parser.restart()
 
 def check_delete(return_value):
-
+    '''
+        同时把char的'去掉
+    '''
     table_name = return_value.table_name
     if not CatalogManager.table_exist(table_name):
         print("Table does not exist!")
@@ -344,20 +347,25 @@ def check_delete(return_value):
         if not CatalogManager.attr_exist(table_name, condition.lvalue):
             print("Attribute {} does not exist!".format(condition.lvalue))
             return False
+        condition.rvalue = condition.rvalue.strip("'")
 
     return True
 
 def check_select(return_value):
+    """
+        同时把char的'去掉
+    """
     table_name = return_value.table_name
     for condition in return_value.condition:
         if not CatalogManager.attr_exist(table_name, condition.lvalue):
             print("Attribute {} does not exist!".format(condition.lvalue))
             return False
+        condition.rvalue = condition.rvalue.strip("'")
     
     return True
 
 def check_create_table(return_value):
-    print(return_value.column_data)
+    # print(return_value.column_data)
     if CatalogManager.attr_exist(return_value.table_name, return_value.attr_name):
         print("Table does not exist!")
         return False
@@ -399,7 +407,7 @@ def check_create_table(return_value):
 
 
 def check_create_index(return_value):
-    print(return_value.attr_name)
+    # print(return_value.attr_name)
     
     if not CatalogManager.attr_exist(return_value.table_name, return_value.attr_name):
         print("Attribute name {} does not exist!")
@@ -431,11 +439,15 @@ def check_drop_index(return_value):
 
 def check_insert(return_value):
 
-    # print(return_value.table_name)
-    attrs = CatalogManager.get_attrs_type(return_value.table_name)
+    print(type(return_value.table_name))
+    try:
+        attrs = CatalogManager.get_attrs_type(return_value.table_name)
+    except KeyError:
+        print("Table not found!")
+        return False
     # attrs = reversed(attrs)
-    print(return_value.column_data)
-    print(attrs)
+    # print(return_value.column_data)
+    # print(attrs)
 
     if len(attrs) != len(return_value.column_data):
         print("Inserted element number {} does not match attribute number of table {}".format(len(return_value.column_data), len(attrs)))
@@ -447,6 +459,7 @@ def check_insert(return_value):
         insert_data = return_value.column_data[i]
 
         if "'" in insert_data:
+            return_value.column_data[i] = return_value.column_data[i].strip("'")
             if attr_type != VALUETYPE.CHAR:
                 print("Value type CHAR does not match on column {}".format(attr_name))
                 return False
@@ -459,7 +472,7 @@ def check_insert(return_value):
             # int or float
             if attr_type == VALUETYPE.INT:
                 return_value.column_data[i] = int(insert_data)
-                print(type(return_value.column_data[i]))
+                # print(type(return_value.column_data[i]))
                 continue
             if attr_type == VALUETYPE.FLOAT:
                 return_value.column_data[i] = float(insert_data)

@@ -166,5 +166,5 @@ class API:
                     IndexManager.insert(index[0], (record_id, page_id), insert_value.column_data[i])
 
     @classmethod
-    def api_quit():
+    def api_quit(cls):
         BufferManager.flush_buffer()

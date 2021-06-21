@@ -101,7 +101,7 @@ class BufferManager:
             victim_block = cls.LRU_replacer.popleft()
             cls.replacer_len -= 1
 
-        print("kick out victim page_id = {}".format(victim_block.page_id))
+        # print("kick out victim page_id = {}".format(victim_block.page_id))
 
         if victim_block.dirty == True:
             cls.write_back_to_file(
@@ -291,7 +291,7 @@ class BufferManager:
             创建新文件，创建成功返回0
             文件有文件头，但没有可用page
         """
-        if os.path.exists(file_name):
+        if os.path.exists(os.path.join(utils.DB_FILE_FOLDER, file_name)):
             print("File {} exists!".format(file_name))
             return -1
         

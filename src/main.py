@@ -1,3 +1,7 @@
 from Interpreter.Interpreter import Interpret
+from API.API import API
 
-Interpret()
+try:
+    Interpret()
+finally:
+    API.api_quit()
