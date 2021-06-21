@@ -3,6 +3,7 @@ from CatalogManager.CatalogManager import CatalogManager
 from RecordManager.RecordManager import RecordManager
 from IndexManager.IndexManager import IndexManager
 from BufferManager.BufferManager import BufferManager
+from Interpreter.InterpreterDS import ReturnValue
 
 class API:
     @classmethod
@@ -16,7 +17,7 @@ class API:
             如失败，告诉原因
 
             table合法性的检查已经在interpreter检查过了
-            我们目前只支持单属性primary key
+            只支持单属性primary key
         '''
         
         table_name = create_value.table_name
@@ -28,8 +29,14 @@ class API:
             if create_value.column_data[i] == create_value.pk[0]:
                 pk_id = i
                 break
-
+        # 创建表格
         ret = CatalogManager.create_table(table_name, attr_num, pk_id, attrs)
+        # 创建索引
+        create_index_value = ReturnValue()
+        create_index_value.table_name = table_name
+        create_index_value.attr_name = create_value.pk[0]
+        create_index_value.index_name = "pk_table_{}".format(table_name)
+        API.api_create_index(create_index_value)
 
         return ret
 
@@ -39,8 +46,6 @@ class API:
             如成功，输出执行成功信息
             如失败，告诉原因
         '''
-
-        
         
 
         table_name = create_value.table_name
@@ -94,19 +99,27 @@ class API:
         # 查找表中存在的index，
         # 形式为（index_id, attr_name)
         index_list = CatalogManager.find_indexes(select_value.table_name)
+        # print(index_list)
         for condition in select_value.condition:
             for index in index_list:
+                # print(condition.lvalue, condition.comparator,condition.rvalue, index)
+
                 if index[1] == condition.lvalue:
                     candidate_tuple = IndexManager.find_by_condition(index[0], condition)
+                    # print(condition.lvalue, condition.comparator,condition.rvalue)
+                    # print(candidate_tuple)
+
                     select_value.condition.remove(condition)
                     break
                 if candidate_tuple is not None:
+                    # print("Not none")
                     break
-
+        
         table_id = CatalogManager.get_table_id(select_value.table_name)
 
         for condition in select_value.condition:
             condition.lvalue = CatalogManager.get_attr_id(table_id, condition.lvalue)[0]
+        # print(candidate_tuple)
   
 
         # 可以利用index进行加速

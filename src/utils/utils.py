@@ -82,8 +82,17 @@ def float_to_byte(float):
 def byte_to_float(byte):
     return unpack("f", byte)[0]
 
-
-
+def print_dbg_info(value):
+    print("------------DEBUG INFO-----------------")
+    print("Action type: {}".format(value.action_type))
+    print("Table name: {}".format(value.table_name))
+    print("Attr name: {}".format(value.attr_name))
+    
+    for cond in value.condition:
+        print(cond.lvalue, cond.comparator, cond.rvalue)
+    
+    
+    
 if __name__ == "__main__":
     import sys
     a = "'2'"

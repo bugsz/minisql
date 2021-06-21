@@ -1,11 +1,12 @@
 from CatalogManager.CatalogManager import CatalogManager
 import os
-from utils.utils import ACTIONTYPE, CONDITION, VALUETYPE
+from utils.utils import ACTIONTYPE, CONDITION, VALUETYPE, COMPARATOR, print_dbg_info
 from Interpreter.InterpreterDS import ReturnValue
 from RecordManager import RecordManager
 from ply import yacc, lex
 from API.API import API 
 from prettytable import PrettyTable
+import time
 
 
 tokens = (
@@ -247,6 +248,8 @@ def p_expression_select(p):
     global return_value
     return_value.action_type = ACTIONTYPE.SELECT_STAR
     return_value.table_name = p[4]
+    
+    # print_dbg_info(return_value)
 
     if check_select(return_value):
         select_result = API.api_select(return_value)
@@ -260,7 +263,7 @@ def p_expression_select(p):
         tb = PrettyTable()
         tb.field_names = attr_row
         for tuple in select_result:
-            print(tuple)
+            # print(tuple)
             tb.add_row(tuple)
         print(tb)
 
@@ -507,8 +510,8 @@ def check_insert(return_value):
 
         insert_data = return_value.column_data[i]
 
-        if "'" in insert_data:
-            return_value.column_data[i] = return_value.column_data[i].strip("'")
+        if ("'" in insert_data) or ("\"" in insert_data):
+            return_value.column_data[i] = return_value.column_data[i].strip("'").strip("\"")
             if attr_type != VALUETYPE.CHAR:
                 print("Value type CHAR does not match on column {}".format(attr_name))
                 return False
@@ -554,62 +557,82 @@ def check_insert(return_value):
                 print("Please use '' to specify a string")
                 return False
 
-    data_tuple = API.api_select(return_value)
-    # 检测是否unique
+    # 利用索引进行优化查询
     table_name = return_value.table_name
+    unique_value = ReturnValue()
+    unique_value.table_name = table_name
     for i in range(len(attrs)):
-        (attr_name, attr_type, attr_length) = attrs[i]
-        unique = CatalogManager.attr_unique(table_name, attr_name)
-        if not unique:
-            continue
-        attr_value_list = [data_tuple[j][i] for j in range(len(data_tuple))]
-        insert_data = return_value.column_data[i]
-        if insert_data in attr_value_list:
-            print("Inserted data on attribute {} should be unique!".format(attr_name))
-            return False
+        # (attr_name, attr_type, attr_length)
+        condition_rvalue = return_value.column_data[i]
+        condition_comparator = "="
+        condition_lvalue = attrs[i][0]
+        unique_value.condition.append(CONDITION(condition_lvalue, condition_comparator, condition_rvalue))
     
+    # 检测是否unique
+    data_tuple = API.api_select(unique_value)
+    if len(data_tuple) != 0:
+        print("Inserted data on attribute {} should be unique!".format(attr_name))
+        return False
+      
     return True        
 
         
 
 parser = yacc.yacc()
 
-def Interpret():
-    API.api_initialize()
+def execute_user_input():
+    reset()
+    data = input("minisql>")
+    while ";" not in data:
+        data = data + input()
+    print(data)
+    
+    start_time = time.time()
+    res = parser.parse(data)
+    end_time = time.time()
+    print("Execute time: {:.2f}s".format(end_time-start_time))
 
+def execute_file():
     global execfile, execfile_name
-    while True:
-        if execfile == 0:
-            data = input("minisql>")
+    if not os.path.exists(execfile_name):
+        print("File does not exist!")
+        return -1
+
+    with open(execfile_name, "r") as f:
+        while True:
+            data = ""
+            new_line = f.readline()
+            if not new_line:
+                print("Detect empty line, quit...")
+                return 0
+            
             reset()
             while ";" not in data:
-                data = data + input()
-            # print(data)
-            
-            res = parser.parse(data)
-        
+                if not new_line:
+                    print("No end token found!")
+                    return -1
+                data += new_line
+                if ";" in new_line:
+                    break
+                new_line = f.readline()
+            print(data)
+            parser.parse(data)
+
+
+def Interpret():
+    API.api_initialize()
+    global execfile, execfile_name
+    execfile = 0
+    
+    while True:
+        if execfile == 0:
+            reset()
+            execute_user_input()
         else:
-            if not os.path.exists(execfile_name):
-                print("File does not exist!")
-                return -1
-
-            with open(execfile_name, "r") as f:
-                while True:
-                    data = ""
-                    new_line = f.readline()
-                    if not new_line:
-                        print("Detect empty line, quit...")
-                        return 0
-                    
-                    reset()
-                    while ";" not in data:
-                        if not new_line:
-                            print("No end token found!")
-                            return -1
-                        data += new_line
-                        if ";" in new_line:
-                            break
-                        new_line = f.readline()
-
-                    print(data)
-                    res = parser.parse(data)                                 
+            start_time = time.time()
+            res = execute_file()
+            end_time = time.time()
+            print("Execute time: {:.2f}s".format(end_time-start_time))
+            if res == -1:
+                return 
+            execfile = 0                                    
