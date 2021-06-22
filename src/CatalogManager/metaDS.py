@@ -202,6 +202,7 @@ class CM_IO:
         pos = None
         cnt = 0
         if meta_type != MetaType.attr:
+            # print(header.page_capacity, header.first_free_page)
             for i in range(header.page_capacity):
                 record = cls.decode_page(meta_type, header.first_free_page, i)
                 if record == None:

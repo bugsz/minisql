@@ -184,3 +184,4 @@ class API:
     @classmethod
     def api_quit(cls):
         BufferManager.flush_buffer()
+        BufferManager.flush_file_buffer()

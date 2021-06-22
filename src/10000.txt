@@ -10004,3 +10004,5 @@ insert into stu values(9996, 'alice', 9996.00);
 insert into stu values(9997, 'bob', 9997.00);
 insert into stu values(9998, 'eve', 9998.00);
 insert into stu values(9999, 'bob', 9999.00);
+select * from stu;
+drop table stu;

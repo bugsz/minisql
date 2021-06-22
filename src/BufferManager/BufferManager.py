@@ -19,6 +19,9 @@ class BufferManager:
     LRU_replacer = deque()
     replacer_len = 0
 
+    file_blocks = {}
+    file_block_len = 0
+
     @classmethod
     def _search_buffer_block(cls, file_name, page_id) -> BufferBlock:
         """
@@ -185,7 +188,14 @@ class BufferManager:
             :return : PageData
         """
         page_offset = page_id * PAGE_SIZE
-
+        f = cls.fetch_file_stream(file_name)
+        f.seek(page_offset)
+        page_data = f.read(PAGE_SIZE)
+        # print(page_data, page_offset)
+        next_free_page = utils.byte_to_int(page_data[0:4])
+        page_bytearray = bytearray(page_data[4:8192])
+        return PageData(next_free_page, page_bytearray)
+        '''
         with open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+") as f:
             f.seek(page_offset)
             page_data = f.read(PAGE_SIZE)
@@ -193,6 +203,7 @@ class BufferManager:
             page_bytearray = bytearray(page_data[4:8192])
             return PageData(next_free_page, page_bytearray)
             # TODO 还要具体考虑
+        '''
 
     @classmethod
     def write_back_to_file(cls, file_name, page_id):
@@ -208,10 +219,18 @@ class BufferManager:
             b'\x00' * 8188) if block.page.data is None else block.page.data
         page_data = utils.int_to_byte(block.page.next_free_page) + page_data
 
+        f = cls.fetch_file_stream(file_name)
+        f.seek(page_offset, 0)
+        f.write(page_data)
+        f.flush()
+        block.dirty = False
+
+        '''
         with open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+") as f:
             f.seek(page_offset, 0)
             f.write(page_data)
             block.dirty = False
+        '''
 
     @classmethod
     def _read_file_header(cls, file_name):
@@ -219,6 +238,17 @@ class BufferManager:
             内部方法
             :return : PageHeader
         """
+
+        f = cls.fetch_file_stream(file_name)
+        f.seek(0, 0)
+        header_data = f.read(PAGE_SIZE)
+        page_header = PageHeader(utils.byte_to_int(header_data[0:4]),
+                                    utils.byte_to_int(header_data[4:8]),
+                                    header_data[8:PAGE_SIZE]
+                                    )
+        return page_header
+
+        '''
         with open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+") as f:
             if f is None:
                 return None
@@ -228,7 +258,7 @@ class BufferManager:
                                      header_data[8:PAGE_SIZE]
                                      )
             return page_header
-
+        '''
     @classmethod
     def remove_block(cls, file_name, page_id, force=False):
         """
@@ -258,7 +288,13 @@ class BufferManager:
         page_header = cls._read_file_header(file_name)
         for i in range(page_header.size):
             cls.remove_block(file_name, i+1, force=True)
-        os.remove(os.path.join(utils.DB_FILE_FOLDER, file_name))
+        try:
+            fstream = cls.fetch_file_stream(file_name)
+            fstream.close()
+            del cls.file_blocks[file_name]
+            cls.buffer_block_len -= 1
+        finally:
+            os.remove(os.path.join(utils.DB_FILE_FOLDER, file_name))
 
     @classmethod
     def force_clear_buffer(cls):
@@ -295,9 +331,15 @@ class BufferManager:
 
         data = bytearray(b"\xff\xff\xff\xff" + b"\x00" * 8188)
         # page_data = PageData(0, data)
+        '''
         with open(os.path.join(utils.DB_FILE_FOLDER, file_name), 'rb+') as f:
             f.seek(PAGE_SIZE*page_id, 0)
             f.write(data)
+        '''
+        fstream = cls.fetch_file_stream(file_name)
+        fstream.seek(PAGE_SIZE*page_id, 0)
+        fstream.write(data)
+        fstream.flush()
         
         return cls.fetch_page(file_name, page_id)
 
@@ -310,10 +352,17 @@ class BufferManager:
         data = utils.int_to_byte(header.first_free_page) \
              + utils.int_to_byte(header.size) \
              + header.data
-
+        '''
         with open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+") as f:
             f.seek(0, 0)
             f.write(data)
+        '''
+        # print(file_name, data, sep = "\n")
+        fstream = cls.fetch_file_stream(file_name)
+        fstream.seek(0, 0)
+        fstream.write(data)
+        fstream.flush()
+
 
     @classmethod
     def get_header(cls, file_name):
@@ -334,10 +383,46 @@ class BufferManager:
             print("File {} exists!".format(file_name))
             return -1
         
-        with open(os.path.join(utils.DB_FILE_FOLDER, file_name), "w") as f:
-            pass
+        # with open(os.path.join(utils.DB_FILE_FOLDER, file_name), "w") as f:
+        #    pass
 
         file_header = PageHeader(0, 0, bytearray(b'\x00'*8184))
         cls.set_header(file_name, file_header)
-        
         return 0
+
+    @classmethod
+    def fetch_file_stream(cls, file_name):
+        """
+            在保证文件已经存在的情况下返回一个文件流
+        """
+        file_stream = None
+        if file_name in cls.file_blocks:
+            return cls.file_blocks[file_name]
+        else:
+            if os.path.exists(os.path.join(utils.DB_FILE_FOLDER, file_name)):
+                file_stream = open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+")
+
+            else:
+                file_stream = open(os.path.join(utils.DB_FILE_FOLDER, file_name), "wb+")
+                file_stream.close()
+                file_stream = open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+")
+
+            if cls.file_block_len > MAX_BUFFER_BLOCKS:
+                for file_block in cls.file_blocks:
+                    file_block.close()
+                    del file_block
+                    cls.file_block_len -= 1
+                    break
+
+            cls.file_blocks[file_name] = file_stream
+            cls.file_block_len += 1
+
+            # print(file_stream)
+            return file_stream
+
+    @classmethod
+    def flush_file_buffer(cls):
+        for f in cls.file_blocks:
+            file = cls.file_blocks[f]
+            file.flush()
+            file.close()
