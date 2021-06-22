@@ -9,7 +9,6 @@ PAGE_SIZE = 8192
 
 
 class BufferManager:
-    # TODO 是不是要考虑维护一个文件表
     def __init__(self) -> None:
         pass
 

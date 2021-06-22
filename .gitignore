@@ -1,3 +1,4 @@
 src/*.txt
 test_gen
 src/DBFiles
+src/test

@@ -6,6 +6,8 @@
   + 程序流程控制，即 `启动并初始化 -> "接收命令、处理命令、显示命令结果" 循环 -> 退出`流程。
   + 接收并解释用户输入的命令，生成命令的内部数据结构表示，同时检查命令的语法正确性和语义正确性，对正确的命令调用API层提供的函数执行并显示执行结果，对不正确的命令显示错误信息。
 
+
+
 ### 2. 语句解析
 
 我们使用词法分析工具lex和语法分析工具yacc对输入的语句进行解析，分析过程分为两步：词法分析和语法分析。
@@ -66,7 +68,19 @@
 
 ### 5. 实现样例
 
-#### 5.1 语句解析
+整个执行流程可以大致分为`语句解析->数据处理->错误检测->执行`四个阶段，以及循环输入读取，下面我们对这些进行简要介绍。
+
+
+
+#### 5.1 循环输入读取
+
++ 我们有一个全局变量`execfile`用于确定执行文件还是执行用户输入，并交由相对应函数处理
++ 两个函数的逻辑基本相同：一直读取输入，直到遇到`;`为止。然后将整个语句交由parser处理，并计算执行时间。
++ 由于逻辑较为简单，在此不做赘述。
+
+
+
+#### 5.2 语句解析
 
 + 我们以`select * from table_name where xxx`的解析过程为例进行分析
   + 我们首先通过词法匹配得到不同的token，然后再进行语法匹配。首先在第一个函数之内匹配是否有 `select * from`，如果有`where`条件，就会进入下一个匹配函数执行。第二个匹配函数匹配`where`和`;`截止符。第三个匹配函数递归匹配所有的条件。部分代码如下。
@@ -105,11 +119,51 @@ def p_expression_all_conditions(p):										# 条件主体，从右往左添加
 
 
 
-#### 5.2 错误检测和处理
+#### 5.3 数据处理
+
+词法和语法解析所获得的都只是字符串类型的数据，也有可能包含引号。因此，我们需要将这些数据转成相应的类型。
+
++ 对于create，我们只需要将匹配的char长度转换成int即可
++ 对于insert，我们首先从`CatalogManager`获取相关属性类型，然后根据这些结果进行转换。
++ 对于select和delete当中的条件`condition`，其包含lvalue, comparator, rvalue三个元素，分别对应元素名，比较运算符，元素值，我们在这里对元素值进行类型转换，方式与insert相同
+
+**类型转换方案：**对于char，我们过滤引号；对于int和float，我们只要检测该字符串是否可以转换成相应类型即可。这可以通过`try...except`解决。大致代码如下
+
+**float类型转换**：由于我们使用byte对float进行储存，这样就一定会带来精度的损失，给等号比较带来麻烦。因此，我们在处理过程中会将`rvalue`转换成byte再转换回来，这样保证相等的float数据转换过后仍然相等。
+
+```python
+	attrs = CatalogManager.get_attrs_type(table_name)
+    # (attr_name, attr_type, attr_length)
+    for condition in return_value.condition:
+        attr_type = None
+        for attr in attrs:
+            if attr[0] == condition.lvalue:
+                attr_type = attr[1]
+        if attr_type == VALUETYPE.INT:
+            try:
+                condition.rvalue = int(condition.rvalue)
+            except:
+                ...  
+        elif attr_type == VALUETYPE.FLOAT:
+            try:
+                condition.rvalue = float(condition.rvalue)
+                condition.rvalue = byte_to_float(float_to_byte(condition.rvalue))
+            except:
+                ...
+        else:
+            if ("'" not in condition.rvalue) and ("\"" not in condition.rvalue):
+                print("You should use "" or '' to specify a string")
+                return None
+            condition.rvalue = condition.rvalue.strip("\"").strip("'")
+```
+
+
+
+#### 5.4 错误检测和处理
 
 + 我们以`create table`为例说明，部分代码如下
 
-  + 在这里，我们只展示了少部分的错误检测代码。首先，我们通过`CatalogManager`查找表格是否存在。然后，我们验证定义是否存在主键和主键是否在表格中。
+  + 在这里，我们只展示了少部分的错误检测代码。首先，我们通过`CatalogManager`查找表格是否存在。然后，我们验证定义是否存在主键和主键是否在表格中。当然此后还有char长度检测，单主键检测等，但是以下代码并没有体现这些实现。
 
   ```python
   def check_create_table(return_value):
@@ -128,7 +182,33 @@ def p_expression_all_conditions(p):										# 条件主体，从右往左添加
               return False
   ```
 
+
+
+#### 5.5 执行
+
++ 执行阶段，我们调用API提供的接口执行操作，获取返回值并展现，在此仅提供简单代码示例，实现细节将在其他部分展现。
+
+  ```python
+  	if check_select(return_value):
+          select_result = API.api_select(return_value)  # 调用API
   
+          if len(select_result) == 0:
+              print("No column selected")
+              return 
+  # --------------------- 输出 -----------------------------
+          attrs = CatalogManager.get_attrs_type(p[4])
+          attr_row = [attr[0] for attr in attrs]
+          tb = PrettyTable()
+          tb.field_names = attr_row
+          for tuple in select_result:
+              tb.add_row(tuple)
+          print(tb)
+          print("{} row(s) affected".format(len(select_result)))
+  ```
+
+
+
+
 
 ### 6. 杂项
 
@@ -136,4 +216,3 @@ def p_expression_all_conditions(p):										# 条件主体，从右往左添加
 
 + 我们使用`PrettyTable`库输出`select`语句执行结果。
 + 库的使用方法非常简单，在此不做赘述
-

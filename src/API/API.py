@@ -113,8 +113,6 @@ class API:
 
                 if index[1] == condition.lvalue:
                     candidate_tuple = IndexManager.find_by_condition(index[0], condition)
-                    # print(condition.lvalue, condition.comparator,condition.rvalue)
-                    # print(candidate_tuple)
                     if condition.comparator != COMPARATOR.NONEQUAL:
                         select_value.condition.remove(condition)
                         break
