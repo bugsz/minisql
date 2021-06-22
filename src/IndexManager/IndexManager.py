@@ -53,6 +53,17 @@ class IndexManager:
             return cls.__find_range(index_id, None, condition.rvalue, False, True)
 
     @classmethod
+    def remove(cls, index_id):
+        if IO.headerMap.get(index_id) != None:
+            del IO.headerMap[index_id]
+        temp = []
+        for i in IO.pageMap:
+            if i[0] == index_id:
+                temp.append(i)
+        for i in temp:
+            del IO.pageMap[i]
+
+    @classmethod
     def find_single(cls, index_id, value):
         """
             查询值等于value的record

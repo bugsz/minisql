@@ -2,6 +2,7 @@ from CatalogManager.metaDS import *
 from BufferManager.BufferManager import BufferManager
 from BufferManager.bufferDS import PageHeader, PageData
 from utils import utils
+import copy
 
 class CatalogManager:
     def __init__(self):
@@ -116,6 +117,7 @@ class CatalogManager:
         header.record_num += 1
         CM_IO.update_header(MetaType.table, header)
         cls.table_dict[record.table_name] = record.table_id
+        print(record.table_id)
 
         header = CM_IO.headerMap.get(MetaType.attr)
         if header == None:
@@ -176,6 +178,16 @@ class CatalogManager:
         page_id = cls.table_dict[table_name] // 30 + 1
         record_id = cls.table_dict[table_name] % 30
         table = CM_IO.decode_page(MetaType.table, page_id, record_id)
+        
+        ret = []
+        temp_dict = copy.deepcopy(cls.index_dict)
+        for i in temp_dict:
+            page_id = cls.index_dict[i] // 30 + 1
+            record_id = cls.index_dict[i] % 30
+            index = CM_IO.decode_page(MetaType.index, page_id, record_id)
+            if index.table_id == table.table_id:
+                ret.append(cls.drop_index(index.index_name))
+        
         table.valid = False
         CM_IO.update_page(MetaType.table, page_id, record_id, table)
         header = CM_IO.headerMap.get(MetaType.table)
@@ -187,6 +199,7 @@ class CatalogManager:
         del cls.table_dict[table_name]
         CM_IO.free_page(MetaType.attr, table.attr_page_id)
         BufferManager.remove_file("record" + str(table.table_id) + ".db")
+        return (table.table_id, ret)
 
     @classmethod
     def drop_index(cls, index_name):
@@ -203,6 +216,7 @@ class CatalogManager:
             CM_IO.free_page(MetaType.index, page_id)
         del cls.index_dict[index_name]
         BufferManager.remove_file("index" + str(index.index_id) + ".db")
+        return index.index_id
 
     @classmethod
     def find_indexes(cls, table_name):

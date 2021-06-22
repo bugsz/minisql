@@ -125,6 +125,17 @@ class RecordManager:
         return False
 
     @classmethod
+    def remove(cls, table_id):
+        if RM_IO.headerMap.get(table_id) != None:
+            del RM_IO.headerMap[table_id]
+        temp = []
+        for i in RM_IO.pageMap:
+            if i[0] == table_id:
+                temp.append(i)
+        for i in temp:
+            del RM_IO.pageMap[i]
+
+    @classmethod
     def __delete_item(cls, table_id, page_id, record_id, record):
         record.valid = False
         RM_IO.update_page(table_id, page_id, record_id, record)

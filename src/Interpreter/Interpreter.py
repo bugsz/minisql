@@ -320,8 +320,10 @@ def p_expression_all_conditions(p):
 
 def p_expression_quit(p):
     '''exp_quit : QUIT'''
-    API.api_quit()
-    print("Bye")
+    # API.api_quit()
+    # print("Bye")
+    raise InterruptedError
+    
     exit(0)
 
 def p_expression_execfile(p):

@@ -82,12 +82,16 @@ class API:
 
     @classmethod
     def api_drop_table(cls, table_name):
-        CatalogManager.drop_table(table_name)
+        table_id, index_ids = CatalogManager.drop_table(table_name)
+        RecordManager.remove(table_id)
+        for i in index_ids:
+            IndexManager.remove(i)
 
 
     @classmethod
     def api_drop_index(cls, index_name):
-        CatalogManager.drop_index(index_name)
+        index_id = CatalogManager.drop_index(index_name)
+        IndexManager.remove(index_id)
 
     @classmethod
     def api_select(cls, select_value) -> List:

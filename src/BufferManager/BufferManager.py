@@ -289,10 +289,18 @@ class BufferManager:
         for i in range(page_header.size):
             cls.remove_block(file_name, i+1, force=True)
         try:
+            if file_name not in cls.file_blocks:
+                os.remove(os.path.join(utils.DB_FILE_FOLDER, file_name))
+                return 
+            
+            # cls.print_stream()
+
             fstream = cls.fetch_file_stream(file_name)
             fstream.close()
             del cls.file_blocks[file_name]
             cls.buffer_block_len -= 1
+
+            # cls.print_stream()
         finally:
             os.remove(os.path.join(utils.DB_FILE_FOLDER, file_name))
 
@@ -403,21 +411,29 @@ class BufferManager:
                 file_stream = open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+")
 
             else:
+                # cls.print_stream()
                 file_stream = open(os.path.join(utils.DB_FILE_FOLDER, file_name), "wb+")
                 file_stream.close()
                 file_stream = open(os.path.join(utils.DB_FILE_FOLDER, file_name), "rb+")
+                # cls.print_stream()
 
             if cls.file_block_len > MAX_BUFFER_BLOCKS:
-                for file_block in cls.file_blocks:
+                del_id = None
+                for f in cls.file_blocks:
+                    # cls.print_stream()
+                    file_block = cls.file_blocks[f]
+                    file_block.flush()
                     file_block.close()
-                    del file_block
-                    cls.file_block_len -= 1
+                    del_id = f
+                    # cls.print_stream()
                     break
+
+                cls.file_block_len -= 1
+                del cls.file_blocks[del_id]
 
             cls.file_blocks[file_name] = file_stream
             cls.file_block_len += 1
 
-            # print(file_stream)
             return file_stream
 
     @classmethod
@@ -426,3 +442,8 @@ class BufferManager:
             file = cls.file_blocks[f]
             file.flush()
             file.close()
+
+    @classmethod
+    def print_stream(cls):
+        for f in cls.file_blocks:
+            print(f)
