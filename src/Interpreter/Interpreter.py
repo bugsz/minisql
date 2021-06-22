@@ -1,7 +1,7 @@
 from BufferManager.BufferManager import BufferManager
 from CatalogManager.CatalogManager import CatalogManager
 import os
-from utils.utils import ACTIONTYPE, CONDITION, VALUETYPE, COMPARATOR, print_dbg_info
+from utils.utils import ACTIONTYPE, CONDITION, VALUETYPE, COMPARATOR, print_dbg_info, float_to_byte, byte_to_float
 from Interpreter.InterpreterDS import ReturnValue
 from RecordManager import RecordManager
 from ply import yacc, lex
@@ -278,7 +278,7 @@ def p_expression_delete(p):
 
     if check_delete(return_value):
         delete_num = API.api_delete(return_value)
-        print("{} row(s) affected".format(delete_num))
+        print("{} row(s) affected".format(len(delete_num)))
 
 def p_expression_insert(p):
     '''exp_insert : INSERT INTO COLUMN_OR_TABLE exp_insert_line'''
@@ -354,7 +354,6 @@ def check_delete(return_value):
         if not CatalogManager.attr_exist(table_name, condition.lvalue):
             print("Attribute {} does not exist!".format(condition.lvalue))
             return False
-        # condition.rvalue = condition.rvalue.strip("'")
     
     return_value = condition_rvalue_decode(return_value)
     if return_value is None:
@@ -478,6 +477,8 @@ def condition_rvalue_decode(return_value):
         elif attr_type == VALUETYPE.FLOAT:
             try:
                 condition.rvalue = float(condition.rvalue)
+                condition.rvalue = byte_to_float(float_to_byte(condition.rvalue))
+                # print(condition.rvalue)
             except:
                 print("Rvalue of condition should be FLOAT for attr {}".format(attr.lvalue))
                 return None
@@ -499,13 +500,12 @@ def check_insert(return_value):
     except KeyError:
         print("Table not found!")
         return False
-    # attrs = reversed(attrs)
-    # print(return_value.column_data)
-    # print(attrs)
 
     if len(attrs) != len(return_value.column_data):
         print("Inserted element number {} does not match attribute number of table {}".format(len(return_value.column_data), len(attrs)))
         return False
+    
+    # print(attrs)
     
     # 检测数据类型是否匹配
     for i in range(len(attrs)):
@@ -515,11 +515,12 @@ def check_insert(return_value):
 
         if ("'" in insert_data) or ("\"" in insert_data):
             return_value.column_data[i] = return_value.column_data[i].strip("'").strip("\"")
+            # print(return_value.column_data[i])
             if attr_type != VALUETYPE.CHAR:
                 print("Value type CHAR does not match on column {}".format(attr_name))
                 return False
-            if len(insert_data) > attr_length:
-                print("Value {} of type char has more characters than specified!".format(insert_data))
+            if len(return_value.column_data[i]) > attr_length:
+                print("Value {} of type char has more characters than specified!".format(return_value.column_data[i]))
                 return False
             continue
 
@@ -547,7 +548,7 @@ def check_insert(return_value):
                     continue
                 
                 if attr_type == VALUETYPE.INT:
-                    print("Cannot inseert float number to int attribute!")
+                    print("Cannot insert float number to int attribute!")
                     return False
 
                 if attr_type == VALUETYPE.CHAR:
@@ -560,14 +561,15 @@ def check_insert(return_value):
                 print("Please use '' to specify a string")
                 return False
 
-        if not check_unique(return_value, attrs):
-            return False
+    if not check_unique(return_value, attrs):
+        return False
     
     return True        
 
 def check_unique(return_value, attrs):
     # 利用索引进行优化查询
     table_name = return_value.table_name
+    # print(attrs)
     
     # print_dbg_info(unique_value)   
     # 检测是否unique
@@ -581,6 +583,7 @@ def check_unique(return_value, attrs):
         condition_rvalue = return_value.column_data[i]
         condition_comparator = "="
         condition_lvalue = attr_name
+        # print(condition_lvalue, condition_comparator, condition_rvalue)
         unique_value.condition.append(CONDITION(condition_lvalue, condition_comparator, condition_rvalue))
         data_tuple = API.api_select(unique_value)
         if len(data_tuple) != 0:

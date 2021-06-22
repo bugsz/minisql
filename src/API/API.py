@@ -151,7 +151,8 @@ class API:
             for index in index_list:
                 if index[1] == condition.lvalue:
                     candidate_tuple = IndexManager.find_by_condition(index[0], condition)
-                    delete_value.condition.remove(condition)
+                    if condition.comparator != COMPARATOR.NONEQUAL:
+                        delete_value.condition.remove(condition)
                     break
                 if candidate_tuple is not None:
                     break

@@ -4,7 +4,7 @@ from BufferManager.bufferDS import BufferBlock
 from utils import utils
 from collections import deque
 import random
-MAX_BUFFER_BLOCKS = 500
+MAX_BUFFER_BLOCKS = 50000
 PAGE_SIZE = 8192
 
 
