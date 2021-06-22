@@ -1,0 +1,16 @@
+create table stu(
+sid int unique,
+sname char(50)
+, grade float,
+primary key(sid)
+);
+insert into stu values(0, 'bob', 0.00);
+insert into stu values(1, 'mallory', 1.00);
+insert into stu values(2, 'mallory', 2.00);
+insert into stu values(3, 'mallory', 3.00);
+insert into stu values(4, 'oscar', 4.00);
+insert into stu values(5, 'issac', 5.00);
+insert into stu values(6, 'mallory', 6.00);
+insert into stu values(7, 'mallory', 7.00);
+insert into stu values(8, 'oscar', 8.00);
+insert into stu values(9, 'oscar', 9.00);

@@ -28,6 +28,7 @@ class BPTree:
             返回split后新增Node, 未split则为None
         """
         p = binary_find(rootNode.key[0:rootNode.size - (0 if rootNode.is_leaf else 1)], value)
+        # print(p)
         if rootNode.is_leaf:
             rootNode.key.insert(p, value)
             rootNode.pointer.insert(p, position)

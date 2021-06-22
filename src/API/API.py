@@ -1,4 +1,5 @@
 from typing import List
+from utils.utils import COMPARATOR
 from CatalogManager.CatalogManager import CatalogManager
 from RecordManager.RecordManager import RecordManager
 from IndexManager.IndexManager import IndexManager
@@ -52,7 +53,8 @@ class API:
         index_name = create_value.index_name
         attr_name = create_value.attr_name
         table_id = CatalogManager.get_table_id(table_name)
-        attr_id = CatalogManager.get_attr_id(table_id, attr_name)
+        attr_id = CatalogManager.get_attr_id(table_id, attr_name)[0]
+        # print(attr_id)
 
         # 创建索引文件
         CatalogManager.create_index(index_name, table_name, attr_name)
@@ -109,9 +111,9 @@ class API:
                     candidate_tuple = IndexManager.find_by_condition(index[0], condition)
                     # print(condition.lvalue, condition.comparator,condition.rvalue)
                     # print(candidate_tuple)
-
-                    select_value.condition.remove(condition)
-                    break
+                    if condition.comparator != COMPARATOR.NONEQUAL:
+                        select_value.condition.remove(condition)
+                        break
                 if candidate_tuple is not None:
                     # print("Not none")
                     break

@@ -4,7 +4,7 @@ from BufferManager.bufferDS import BufferBlock
 from utils import utils
 from collections import deque
 import random
-MAX_BUFFER_BLOCKS = 100
+MAX_BUFFER_BLOCKS = 500
 PAGE_SIZE = 8192
 
 
@@ -13,10 +13,11 @@ class BufferManager:
     def __init__(self) -> None:
         pass
 
-    buffer_blocks = []
+    # buffer_blocks = []
+    buffer_blocks = {}
+    buffer_block_len = 0
     LRU_replacer = deque()
     replacer_len = 0
-    # LRUReplacer(MAX_BUFFER_BLOCKS)
 
     @classmethod
     def _search_buffer_block(cls, file_name, page_id) -> BufferBlock:
@@ -28,10 +29,18 @@ class BufferManager:
             :param page_id  : 文件中的offset
             :return BufferBlock
         """
+        block = None
+        try:
+            block = cls.buffer_blocks[(file_name, page_id)]
+        except:
+            block = None
+        finally:
+            return block
+        '''
         for buffer_block in cls.buffer_blocks:
             if buffer_block.file_name == file_name and buffer_block.page_id == page_id:
                 return buffer_block
-
+        '''
         return None
 
     @classmethod
@@ -77,9 +86,17 @@ class BufferManager:
         """
             把dirty block写入磁盘，不踢出缓冲区
         """
+        '''
         for block in cls.buffer_blocks:
             if block.dirty == True:
                 cls.write_back_to_file(block.file_name, block.page_id)
+                block.dirty = False
+        '''
+        for key in cls.buffer_blocks:
+            # print(key)
+            block = cls.buffer_blocks[key]
+            if block.dirty == True:
+                cls.write_back_to_file(key[0], key[1])
                 block.dirty = False
 
     @classmethod
@@ -92,27 +109,35 @@ class BufferManager:
         flag = True
         if cls.replacer_len == 0:
             print("No block can be replaced!")
-            rand_idx = random.randint(0, MAX_BUFFER_BLOCKS-1)
-            victim_block = cls.buffer_blocks[rand_idx]
+            # rand_idx = random.randint(0, MAX_BUFFER_BLOCKS-1)
+            # victim_block = cls.buffer_blocks[rand_idx]
+            victim_block_key = None
+            for key in cls.buffer_blocks:
+                victim_block_key = key
+                break
+
             # 如果没有block可以被替换该怎么办
             # 那就随机unpin一个
             flag = False
         else:
-            victim_block = cls.LRU_replacer.popleft()
+            victim_block_key = cls.LRU_replacer.popleft()
             cls.replacer_len -= 1
 
+        victim_block = cls.buffer_blocks[victim_block_key]
         # print("kick out victim page_id = {}".format(victim_block.page_id))
-
+        # print(victim_block_key)
         if victim_block.dirty == True:
-            cls.write_back_to_file(
-                victim_block.file_name, victim_block.page_id)
+            cls.write_back_to_file(victim_block_key[0], victim_block_key[1])
 
-        cls.buffer_blocks.remove(victim_block)
+        del cls.buffer_blocks[victim_block_key]
+        cls.buffer_block_len -= 1
+
         return flag
 
     @classmethod
     def set_page(cls, file_name, page_id, new_page):
         block = cls._search_buffer_block(file_name, page_id)
+
         if block is None:
             return 
 
@@ -133,14 +158,17 @@ class BufferManager:
         block_from_buffer = cls._search_buffer_block(file_name, page_id)
         if block_from_buffer is not None:
             return block_from_buffer.page
-        elif len(cls.buffer_blocks) < MAX_BUFFER_BLOCKS:
+        elif cls.buffer_block_len < MAX_BUFFER_BLOCKS:
             # 如果该页不在buffer内且buffer非满
             # print(file_name, page_id)
             page_data = cls._fetch_page_from_file(file_name, page_id)
-            block = BufferBlock(page_data, file_name, page_id)
-            cls.buffer_blocks.append(block)
 
-            cls.LRU_replacer.append(block)
+            block = BufferBlock(page_data, file_name, page_id)
+            block_key = (file_name, page_id)
+            cls.buffer_blocks[(file_name, page_id)] = block
+            cls.buffer_block_len += 1
+
+            cls.LRU_replacer.append(block_key)
             cls.replacer_len += 1
 
             return page_data
@@ -215,7 +243,10 @@ class BufferManager:
             return False
         if block.dirty == True:
             cls.write_back_to_file(file_name, page_id)
-        cls.buffer_blocks.remove(block)
+        
+        # cls.buffer_blocks.remove(block)
+        del cls.buffer_blocks[(file_name, page_id)]
+        cls.buffer_block_len -= 1
         return True
 
     @classmethod
@@ -235,11 +266,19 @@ class BufferManager:
             强制清空buffer，不管其有没有被pin
             这一般在退出程序的时候使用
         """
+        for block_key in cls.buffer_blocks:
+            # print(block_key)
+            block = cls.buffer_blocks[block_key]
+            if block.dirty == True:
+                cls.write_back_to_file(block_key[0], block_key[1])
+        
+        '''
         for block_idx in range(len(cls.buffer_blocks)-1, -1, -1):
             block = cls.buffer_blocks[block_idx]
             if block.dirty == True:
                 cls.write_back_to_file(block.file_name, block.page_id)
             cls.buffer_blocks.remove(block)
+        '''
 
     @classmethod
     def create_page(cls, file_name) -> PageData:

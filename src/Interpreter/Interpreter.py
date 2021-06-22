@@ -1,3 +1,4 @@
+from BufferManager.BufferManager import BufferManager
 from CatalogManager.CatalogManager import CatalogManager
 import os
 from utils.utils import ACTIONTYPE, CONDITION, VALUETYPE, COMPARATOR, print_dbg_info
@@ -600,6 +601,7 @@ def execute_user_input():
     res = parser.parse(data)
     end_time = time.time()
     print("Execute time: {:.2f}s".format(end_time-start_time))
+    # print(BufferManager.buffer_blocks)
 
 def execute_file():
     global execfile, execfile_name
